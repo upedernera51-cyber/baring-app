@@ -8,18 +8,20 @@ import time
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
 # Inyectamos el CSS sin el prefijo 'f' para evitar conflictos con las llaves de Python
+# 1. --- ESTÉTICA CORREGIDA (PARA SCROLL EN CELULAR) ---
 st.markdown("""
     <style>
-    /* FORZAR FONDO FIJO */
+    /* 1. FONDO QUE PERMITE SCROLL */
     .stApp {
-        background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), 
+        background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
                     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop") !important;
         background-size: cover !important;
         background-position: center !important;
-        background-attachment: fixed !important;
+        /* Quitamos 'fixed' para que el celu no se trabe al deslizar */
+        background-attachment: scroll !important; 
     }
 
-    /* FORZAR LETRAS BLANCAS EN LABELS Y TEXTOS */
+    /* 2. FORZAR LETRAS BLANCAS */
     .stMarkdown p, .stTextInput label, .stSelectbox label, .stNumberInput label, label p, .stAlert p {
         color: white !important;
         font-size: 18px !important;
@@ -27,14 +29,14 @@ st.markdown("""
         text-shadow: 1px 1px 2px black !important;
     }
 
-    /* TÍTULOS EN ÁMBAR */
+    /* 3. TÍTULOS */
     h1, h2, h3, .stSubheader {
         color: #FFB300 !important;
         text-align: center !important;
         text-shadow: 2px 2px 4px #000000 !important;
     }
 
-    /* PRECIO RESALTADO */
+    /* 4. PRECIO RESALTADO */
     .price-tag {
         font-size: 35px !important;
         color: #FFB300 !important;
@@ -47,29 +49,31 @@ st.markdown("""
         background: rgba(0,0,0,0.6) !important;
     }
 
-    /* BOTÓN AMBAR */
+    /* 5. BOTÓN AMBAR */
     .stButton>button {
         background-color: #FFB300 !important;
         color: black !important;
         font-weight: bold !important;
         font-size: 22px !important;
         border-radius: 15px !important;
-        height: 3em !important;
+        height: 3.5em !important;
         border: none !important;
+        margin-top: 10px !important;
     }
     
-    /* TABLAS ESTILO PIZARRA */
+    /* 6. TABLAS */
     .stTable {
         background-color: rgba(255, 255, 255, 0.1) !important;
         border-radius: 10px !important;
+        overflow-x: auto !important; /* Permite deslizar tablas anchas */
     }
     th { color: #FFB300 !important; background-color: rgba(0,0,0,0.5) !important; }
     td { color: white !important; background-color: rgba(0,0,0,0.3) !important; }
 
-    /* Forzar que los inputs se vean bien */
-    input, select {
-        background-color: #333 !important;
-        color: white !important;
+    /* Forzar visibilidad en inputs del celu */
+    div[data-baseweb="select"] {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -154,6 +158,7 @@ if not data_actual.empty:
     st.subheader("📋 Últimos Pedidos")
     historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
     st.table(historial)
+
 
 
 
