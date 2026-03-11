@@ -129,31 +129,41 @@ def cargar_datos():
 
 data_actual = cargar_datos()
 
-# 3. --- FORMULARIO ---
+# 3. --- FORMULARIO (VERSIÓN ANTI-TECLADO TOTAL) ---
 with st.container():
     nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
-    cat = st.radio("📂 Seleccioná Categoría:", list(CARTA.keys()))
-    prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()))
     
-    precio_actual = CARTA[cat][prod]
-    st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
+    st.markdown("### 📂 Categoría")
+    cat = st.pills("Seleccioná categoría:", list(CARTA.keys()), label_visibility="collapsed")
     
-    cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
-    
-    if st.button("¡ANOTAR PEDIDO! 🚀"):
-        if nombre:
-            payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-            with st.spinner("Enviando..."):
-                try:
-                    requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                    st.cache_data.clear()
-                except:
-                    st.cache_data.clear()
-                st.success(f"✅ ¡Anotado, {nombre}!")
-                time.sleep(1)
-                st.rerun()
-        else:
-            st.warning("⚠️ Poné tu nombre para la cuenta.")
+    if cat:
+        st.markdown(f"### 🍕 Productos de {cat}")
+        # Usamos pills para los productos también. 
+        # Esto genera botones que se pueden tocar sin disparar el teclado.
+        prod = st.pills("Seleccioná producto:", list(CARTA[cat].keys()), label_visibility="collapsed")
+        
+        if prod:
+            precio_actual = CARTA[cat][prod]
+            st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
+            
+            cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
+            
+            if st.button("¡ANOTAR PEDIDO! 🚀"):
+                if nombre:
+                    payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
+                    with st.spinner("Enviando..."):
+                        try:
+                            requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
+                            st.cache_data.clear()
+                        except:
+                            st.cache_data.clear()
+                        st.success(f"✅ ¡Anotado, {nombre}!")
+                        time.sleep(1)
+                        st.rerun()
+                else:
+                    st.warning("⚠️ Poné tu nombre para la cuenta.")
+    else:
+        st.info("👆 Seleccioná una categoría para ver los productos.")
 
 # 4. --- TABLAS ---
 if not data_actual.empty:
@@ -174,6 +184,7 @@ if not data_actual.empty:
         st.table(historial)
     except:
         st.table(data_actual.iloc[::-1].head(10))
+
 
 
 
