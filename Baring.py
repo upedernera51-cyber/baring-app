@@ -4,26 +4,12 @@ import requests
 import json
 import time
 
-# 1. --- CONFIGURACIÓN Y ESTÉTICA FORZADA ---
+# 1. --- CONFIGURACIÓN Y ESTÉTICA DEFINITIVA ---
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
 st.markdown("""
     <style>
-            /* Estilo para que el radio button parezca una lista de botones */
-    div[data-testid="stWidgetLabel"] p {
-        font-size: 20px !important;
-        color: #FFB300 !important;
-    }
-    .stRadio div[role="radiogroup"] {
-        gap: 10px;
-    }
-    .stRadio div[role="radiogroup"] label {
-        background-color: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 179, 0, 0.3);
-        border-radius: 10px;
-        padding: 10px 15px;
-        width: 100%;
-    }
+    /* FONDO Y TEXTOS */
     .stApp {
         background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
                     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop") !important;
@@ -42,6 +28,29 @@ st.markdown("""
         text-align: center !important;
         text-shadow: 2px 2px 4px #000000 !important;
     }
+
+    /* ELIMINAR TECLADO EN SELECTBOX */
+    /* Este bloque detecta el input dentro del selector y le quita el foco de escritura */
+    div[data-baseweb="select"] input {
+        caret-color: transparent !important;
+        inputmode: none !important;
+        pointer-events: none !important;
+    }
+
+    /* ESTILO DE CATEGORÍAS (RADIO) */
+    .stRadio div[role="radiogroup"] {
+        gap: 8px;
+    }
+    .stRadio div[role="radiogroup"] label {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 179, 0, 0.3);
+        border-radius: 10px;
+        padding: 8px 12px;
+        width: 100%;
+        color: white !important;
+    }
+
+    /* BOTÓN Y PRECIO */
     .price-tag {
         font-size: 35px !important;
         color: #FFB300 !important;
@@ -62,24 +71,17 @@ st.markdown("""
         height: 3.5em !important;
         border: none !important;
     }
-    .stTable {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border-radius: 10px !important;
-    }
+    
+    /* TABLAS */
+    .stTable { background-color: rgba(255, 255, 255, 0.1) !important; border-radius: 10px !important; }
     th { color: #FFB300 !important; background-color: rgba(0,0,0,0.5) !important; }
     td { color: white !important; background-color: rgba(0,0,0,0.3) !important; }
-    
-    /* Hack para evitar el teclado en el selectbox */
-    div[data-baseweb="select"] input {
-        caret-color: transparent !important;
-        inputmode: none !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍻 BARING NIGHT 🍻")
 
-# 2. --- DATOS Y CARTA ---
+# 2. --- CARTA COMPLETA ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
@@ -129,17 +131,14 @@ data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
 with st.container():
-    nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
-    
-    # Categorías una debajo de la otra para que no se amontonen
+    nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
     cat = st.radio("📂 Seleccioná Categoría:", list(CARTA.keys()))
-    
     prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()))
     
     precio_actual = CARTA[cat][prod]
     st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
     
-    cant = st.number_input("Cantidad:", 1, 10, 1)
+    cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
     
     if st.button("¡ANOTAR PEDIDO! 🚀"):
         if nombre:
@@ -155,15 +154,14 @@ with st.container():
                 st.rerun()
         else:
             st.warning("⚠️ Poné tu nombre para la cuenta.")
-# 4. --- RESUMEN Y TABLAS ---
+
+# 4. --- TABLAS ---
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
-    
     try:
         if df_fix.shape[1] >= 4:
             df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
-        
         st.subheader("💰 Resumen")
         df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
         resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
@@ -176,6 +174,7 @@ if not data_actual.empty:
         st.table(historial)
     except:
         st.table(data_actual.iloc[::-1].head(10))
+
 
 
 
