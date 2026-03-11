@@ -42,15 +42,35 @@ CARTA = {
         "Red Bull": 6000,
         "Speed": 4600
     },
-    "Comida 🍕": {
+"Comida 🍕": {
+        # --- Hamburguesas (Precios Doble/Completa) ---
+        "Burger Clásica (Doble)": 13000,
+        "Burger La Cheese (Doble)": 13500,
+        "Burger La Antipasti (Doble)": 13990,
+        "Burger Cuarto de Visio (Doble)": 13990,
+        "Burger Walt Disney": 15000,
+        "Burger La Stout": 15000,
+        "Burger La Kiki (Pollo)": 15000,
+        "Burger La Rockera": 15000,
+        "Burger La Visio": 15000,
+        "Burger Dobby Quinoa (Vegetariana)": 13000,
+        # --- Papas de todo tipo ---
+        "Papas Clásicas": 9500,
+        "Papas Bravas": 9900,
+        "Papas Criollas": 9900,
+        "Papas con Cheddar": 9900,
+        "Papas Cuatro Quesos": 9900,
+        "Papas Stout (Carne desmechada)": 10500,
+        "Papas Visio (Panceta y Verdeo)": 9900,
+        # --- Pizzas ---
         "Pizza Mozzarella": 16000,
         "Pizza Napolitana / Fugazza": 17000,
-        "Pizza Especial Jamón / Calabresa / Caprese / 4 Quesos": 18000,
+        "Pizza Especial (Jamón/Calabresa/Caprese)": 18000,
         "Pizza Visio (Cheddar/Panceta)": 18900,
-        "Pizza Rúcula y Crudo / Stout (Carne)": 19900,
-        "Adicional Toppings": 2500
-    }
-}
+        "Pizza Stout (Carne desmechada)": 19900,
+        "Pizza Rúcula y Crudo": 19900
+    }    }
+
 
 # 2. --- CONFIGURACIÓN DE LA APP ---
 st.set_page_config(page_title="Baring - La Terminal", page_icon="🍺")
@@ -115,6 +135,5 @@ if st.session_state.consumos:
     if st.button("❌ Limpiar todo (Solo cumpleañero)"):
         st.session_state.consumos = []
         st.rerun()
-else:
-    st.write("Aún no hay pedidos. ¡Salud! 🥂")
+
 
