@@ -80,20 +80,24 @@ with st.container(border=True):
     
     if st.button("Anotar a mi cuenta ➕"):
         if nombre:
-            # Preparamos los datos para enviar
             payload = {
                 "Invitado": nombre,
                 "Producto": prod,
                 "Cant": int(cant),
                 "Subtotal": int(precio_actual * cant)
             }
-            try:
-                # Enviamos el POST al script de Google
-                requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=10)
-                st.success(f"✅ ¡Anotado para {nombre}!")
-                st.rerun()
-            except:
-                st.error("Error al conectar con la base de datos.")
+            # Usamos un spinner para que el usuario sepa que está trabajando
+            with st.spinner("Anotando..."):
+                try:
+                    # Enviamos los datos
+                    requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=10)
+                    
+                    # Logramos que Streamlit ignore cualquier respuesta extraña de Google
+                    st.toast(f"✅ ¡Anotado para {nombre}!")
+                    st.rerun() 
+                except:
+                    # Solo mostramos error si realmente no se pudo enviar el dato
+                    st.error("Hubo un problema de conexión, pero chequeá el Sheet.")
         else:
             st.error("⚠️ Por favor, poné tu nombre.")
 
@@ -111,5 +115,6 @@ if not data_actual.empty:
     
     with st.expander("Ver detalle de todos los pedidos"):
         st.dataframe(data_actual, use_container_width=True, hide_index=True)
+
 
 
