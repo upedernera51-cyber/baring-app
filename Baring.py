@@ -4,8 +4,8 @@ import requests
 import json
 import time
 
-# 1. --- CONFIGURACIÓN Y ESTÉTICA ---
-st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
+# 1. --- CONFIGURACIÓN Y ESTÉTICA (LOOK RUIN BAR) ---
+st.set_page_config(page_title="La Terminal App", page_icon="🍺", layout="centered")
 
 st.markdown("""
     <style>
@@ -18,19 +18,20 @@ st.markdown("""
     }
     .stMarkdown p, label p {
         color: white !important;
-        font-size: 18px !important;
+        font-size: 19px !important;
         font-weight: 600 !important;
+        text-shadow: 1px 1px 2px black !important;
     }
     h1, h2, h3 {
         color: #FFB300 !important;
         text-align: center !important;
         text-shadow: 2px 2px 4px #000000 !important;
     }
-    /* Estilo para los botones de selección (Pills) */
-    div[data-testid="stWidgetLabel"] p { color: #FFB300 !important; font-size: 20px !important; }
+    /* Estilo para los botones de selección (Pills) para evitar teclado */
+    div[data-testid="stWidgetLabel"] p { color: #FFB300 !important; font-size: 22px !important; }
     
     .price-tag {
-        font-size: 38px !important;
+        font-size: 40px !important;
         color: #FFB300 !important;
         font-weight: bold !important;
         text-align: center !important;
@@ -38,7 +39,7 @@ st.markdown("""
         margin: 20px 0 !important;
         border: 3px solid #FFB300 !important;
         border-radius: 20px !important;
-        background: rgba(0,0,0,0.7) !important;
+        background: rgba(0,0,0,0.8) !important;
     }
     .stButton>button {
         background-color: #FFB300 !important;
@@ -48,45 +49,66 @@ st.markdown("""
         border-radius: 15px !important;
         height: 3.5em !important;
         width: 100% !important;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
     }
-    .stTable { background-color: rgba(255, 255, 255, 0.1) !important; border-radius: 10px !important; }
-    th { color: #FFB300 !important; }
-    td { color: white !important; }
+    .stTable { background-color: rgba(255, 255, 255, 0.05) !important; border-radius: 10px !important; }
+    th { color: #FFB300 !important; font-size: 18px !important; }
+    td { color: white !important; font-size: 16px !important; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍻 LA TERMINAL RUIN BAR 🍻")
 
-# 2. --- CARTA ACTUALIZADA (CON NUEVAS BIRRAS) ---
+# 2. --- CARTA COMPLETA (EXTRACTO DE PDF E IMAGEN) ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
-    "Cervezas Artesanales 🍺": {
-        "Pinta Visionaire (Irish/Caramel/APA)": 7000,
-        "Pinta Calvu (F. Rojos/EPA/Scottish/L. Kush)": 7500,
+    "Birras Artesanales 🍺": {
+        "Pinta Calvu (Frutos Rojos/EPA/Scottish/L.Kush)": 7500,
         "Pinta Fermentum (Amber/Session IPA/APA)": 7500,
+        "Pinta Visionaire (Irish/Caramel/APA)": 7000,
         "Pinta Walmunz (Stout/Barley)": 7800,
-        "Pinta Visionaire Común": 5500,
+        "Pinta Visionaire (Clásica)": 5500,
         "Pinta Premium": 6800,
         "Heineken Monjita": 6500,
         "Heineken Balde x6": 35000,
-        "Imperial Lata": 5500
+        "Imperial Lata (Variedades)": 5500
     },
-    "Tragos & Coctelería 🍸": {
-        "Fernet Branca": 6500, "Mojito": 7500, "Gin Tonic Malandra": 7000,
-        "Gin Tonic Importado": 9000, "Aperol Spritz": 7500, "Jager Bomb": 11500,
-        "Negroni": 8800, "Coctelería de Autor (Varios)": 11500, "Cynar Julep": 7000
+    "Coctelería & Tragos 🍸": {
+        "Fernet Branca": 6500, "Gin Tonic Malandra": 7000, "Aperol Spritz": 7500,
+        "Mojito / Mojito Malibú": 7500, "Jager Bomb / Jager Julep": 11500,
+        "Negroni": 8800, "Old Fashioned": 11500, "Cynar Julep": 7000,
+        "Gin Tonic Importado": 9000, "Coctelería Autor (Dobby/Hedwig/etc)": 11500,
+        "Vermouth / Gancia": 6000, "Caipirinha / Caipiroska": 7000
     },
-    "Comida & Papas 🍕🍟": {
-        "Papas Clásicas": 9500, "Papas Especiales (Cheddar/Visio/etc)": 9900,
-        "Papas Stout (Carne desmechada)": 10500, "Pizza Mozzarella": 16000,
-        "Pizza Especial / Calabresa": 18000, "Pizza Stout / Rúcula y Crudo": 19900,
-        "Burger Clásica (Doble)": 13000, "Burger Walt Disney / Stout": 15000,
-        "Lomo Cordobés (XL)": 19990
+    "Pizzas 🍕": {
+        "Pizza Mozzarella": 16000, "Pizza Napolitana / Fugazza": 17000,
+        "Pizza Calabresa / 4 Quesos": 18000, "Pizza Especial / Caprese": 18000,
+        "Pizza Visio (Cheddar/Papas/Panceta)": 18900, "Pizza Stout (Carne Desmechada)": 19900,
+        "Pizza Mozzarella Sin TACC": 19900, "Adicional Muzza Vegana": 3500
     },
-    "Bebidas & Otros 🥤": {
+    "Burgers & Lomos 🍔": {
+        "Burger Clásica / Cheese (Doble)": 13500, 
+        "Burger Antipasti / Cuarto / Caserita (Doble)": 13990,
+        "Burger Walt Disney / Stout / Rockera": 15000,
+        "Burger Dobby Quinoa (Veggie)": 13000,
+        "Lomo Cordobés (M)": 15990, "Lomo Cordobés (XL)": 19990,
+        "Lomo Visio (XL)": 20900, "Chegusan de Mila (XL)": 19990
+    },
+    "Para Picar 🍟": {
+        "Papas Clásicas": 9500, "Papas Especiales (Cheddar/Bravas/Visio)": 9900,
+        "Papas Stout (Carne desmechada)": 10500, "Bastones de Mozzarella": 9900,
+        "Rabas Clásicas": 17500, "Crispy Chicken Fingers": 11900,
+        "Tabla La Visio (Para 2)": 28990, "Tabla La Visio (Para 4)": 39990
+    },
+    "Vinos & Espumantes 🍷": {
+        "Lobo Piel de Cordero": 13500, "Eugenio Bustos Dulce": 15000,
+        "Dieter Meier Puro": 18700, "Luigi Bosca": 23100,
+        "Chandon Extra Brut": 28000, "Botella Chandon + 3 Speed": 37000
+    },
+    "Sin Alcohol & Postres 🥤": {
         "Gaseosa / Agua / Saborizada": 3800, "Vaso Limonada": 3800,
-        "Jarra Limonada": 13000, "Red Bull": 6000, "Speed": 4600, "Postre": 6500
+        "Jarra Limonada": 13000, "Red Bull / Speed": 5000, "Postre": 6500
     }
 }
 
@@ -102,14 +124,15 @@ def cargar_datos():
 
 data_actual = cargar_datos()
 
-# 3. --- FORMULARIO (MODO PILLS - NO TECLADO) ---
-nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
+# 3. --- FORMULARIO (SISTEMA DE BOTONES ANTI-TECLADO) ---
+nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 
-st.write("### 📂 1. Elegí Categoría")
+st.write("### 📂 1. Seleccioná Categoría")
+# st.pills es la clave: son botones, no campos de texto. Cero teclado.
 cat = st.pills("Categorías", list(CARTA.keys()), label_visibility="collapsed")
 
 if cat:
-    st.write(f"### 🍕 2. Elegí {cat}")
+    st.write(f"### 🍕 2. Seleccioná {cat}")
     prod = st.pills("Productos", list(CARTA[cat].keys()), label_visibility="collapsed")
     
     if prod:
@@ -121,7 +144,7 @@ if cat:
         if st.button("🚀 ¡ANOTAR PEDIDO!"):
             if nombre:
                 payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-                with st.spinner("Enviando..."):
+                with st.spinner("Enviando a la barra..."):
                     try:
                         requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
                         st.cache_data.clear()
@@ -130,22 +153,23 @@ if cat:
                         st.rerun()
                     except: st.error("Error de conexión.")
             else:
-                st.warning("⚠️ Falta el nombre.")
+                st.warning("⚠️ Por favor, poné tu nombre.")
 
-# 4. --- TABLAS ---
+# 4. --- RESUMEN DE CUENTAS ---
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
     try:
         if df_fix.shape[1] >= 4:
             df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
-        st.subheader("💰 Resumen")
+        st.subheader("💰 Resumen de Gastos")
         df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
         resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
         resumen.columns = ["Invitado", "Total ($)"]
         resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
         st.table(resumen)
     except: st.table(data_actual.iloc[::-1].head(5))
+
 
 
 
