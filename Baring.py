@@ -27,7 +27,6 @@ st.markdown("""
         text-align: center !important;
         text-shadow: 2px 2px 4px #000000 !important;
     }
-    /* Estilo para los botones de selección (Pills) para evitar teclado */
     div[data-testid="stWidgetLabel"] p { color: #FFB300 !important; font-size: 22px !important; }
     
     .price-tag {
@@ -59,27 +58,15 @@ st.markdown("""
 
 st.title("🍻 LA TERMINAL RUIN BAR 🍻")
 
-# 2. --- CARTA COMPLETA (EXTRACTO DE PDF E IMAGEN) ---
+# 2. --- CARTA COMPLETA ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
     "Birras Artesanales 🍺": {
-        "Golden": 5900,
-        "Honey": 5900,
-        "Calvu Scottish": 7500,
-        "IPA": 6500,
-        "Irish Red": 7000,
-        "Caramel": 7000,
-        "Frutos Rojos": 7000,
-        "Amber Lager": 7000,
-        "scottish": 7800,
-        "Barley": 7800,
-        "Lemon Kush": 8000,
-        "Stout": 7800,
-        "Session IPA": 7500,
-        "APA": 7500,
-        "EPA": 7500,
-        "Artesanal Visionaire": 7500
+        "Golden": 5900, "Honey": 5900, "Calvu Scottish": 7500, "IPA": 6500,
+        "Irish Red": 7000, "Caramel": 7000, "Frutos Rojos": 7000, "Amber Lager": 7000,
+        "scottish": 7800, "Barley": 7800, "Lemon Kush": 8000, "Stout": 7800,
+        "Session IPA": 7500, "APA": 7500, "EPA": 7500, "Artesanal Visionaire": 7500
     },
     "Coctelería & Tragos 🍸": {
         "Fernet Branca": 6500, "Gin Tonic Malandra": 7000, "Aperol Spritz": 7500,
@@ -118,6 +105,7 @@ CARTA = {
         "Jarra Limonada": 13000, "Red Bull / Speed": 5000, "Postre": 6500
     }
 }
+
 @st.cache_data(ttl=60)
 def cargar_datos():
     try:
@@ -130,11 +118,10 @@ def cargar_datos():
 
 data_actual = cargar_datos()
 
-# 3. --- FORMULARIO (SISTEMA DE BOTONES ANTI-TECLADO) ---
+# 3. --- FORMULARIO ---
 nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 
 st.write("### 📂 1. Seleccioná Categoría")
-# st.pills es la clave: son botones, no campos de texto. Cero teclado.
 cat = st.pills("Categorías", list(CARTA.keys()), label_visibility="collapsed")
 
 if cat:
@@ -151,29 +138,39 @@ if cat:
             if nombre:
                 payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
                 with st.spinner("Enviando a la barra..."):
-                    try:
-                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                        st.cache_data.clear()
-                        st.success(f"✅ ¡Anotado para {nombre}!")
-                        time.sleep(1)
-                        st.rerun()
-                    except: st.error("Error de conexión.")
+                    # Se eliminó el cartel de error para mayor fluidez
+                    requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
+                    st.cache_data.clear()
+                    st.success(f"✅ ¡Anotado para {nombre}!")
+                    time.sleep(1)
+                    st.rerun()
             else:
                 st.warning("⚠️ Por favor, poné tu nombre.")
 
-# 4. --- RESUMEN DE CUENTAS ---
+# 4. --- RESUMEN Y ÚLTIMOS MOVIMIENTOS ---
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
     try:
+        # Aseguramos nombres de columnas
         if df_fix.shape[1] >= 4:
             df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+        
+        # TABLA 1: Resumen por persona
         st.subheader("💰 Resumen de Gastos")
         df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
         resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
         resumen.columns = ["Invitado", "Total ($)"]
         resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
         st.table(resumen)
-    except: st.table(data_actual.iloc[::-1].head(5))
+
+        # TABLA 2: Últimos pedidos (Historial)
+        st.subheader("📋 Últimos Pedidos")
+        historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5)
+        st.table(historial)
+        
+    except:
+        st.info("Cargando historial de pedidos...")
+
 
 
