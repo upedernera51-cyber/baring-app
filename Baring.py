@@ -56,7 +56,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🍻 LA TERMINAL RUIN BAR 🍻")
+st.title("🍻 BARING 🍻")
 
 # 2. --- CARTA COMPLETA ---
 URL_SCRIPT = st.secrets["api_url"]
@@ -171,6 +171,7 @@ if not data_actual.empty:
         
     except:
         st.info("Cargando historial de pedidos...")
+
 
 
 
