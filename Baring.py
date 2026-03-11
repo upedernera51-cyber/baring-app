@@ -64,23 +64,22 @@ URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
     "Birras Artesanales 🍺": {
-        "Calvu Frutos Rojos": 7500,
-        "Calvu EPA": 7500,
+        "Golden": 5900,
+        "Honey": 5900,
         "Calvu Scottish": 7500,
-        "Calvu Lemon Kush": 7500,
-        "Fermentum Amber Lager": 7500,
-        "Fermentum Session IPA": 7500,
-        "Fermentum APA": 7500,
-        "Visionaire Irish": 7000,
-        "Visionaire Caramel": 7000,
-        "Visionaire APA": 7000,
-        "Walmunz Stout": 7800,
-        "Walmunz Barley Wine": 7800,
-        "Pinta Visionaire (Clásica)": 5500,
-        "Pinta Premium": 6800,
-        "Heineken Monjita": 6500,
-        "Heineken Balde x6": 35000,
-        "Imperial Lata": 5500
+        "IPA": 6500,
+        "Irish Red": 7000,
+        "Caramel": 7000,
+        "Frutos Rojos": 7000,
+        "Amber Lager": 7000,
+        "scottish": 7800,
+        "Barley": 7800,
+        "Lemon Kush": 8000,
+        "Stout": 7800,
+        "Session IPA": 7500,
+        "APA": 7500,
+        "EPA": 7500,
+        "Artesanal Visionaire": 7500
     },
     "Coctelería & Tragos 🍸": {
         "Fernet Branca": 6500, "Gin Tonic Malandra": 7000, "Aperol Spritz": 7500,
@@ -176,23 +175,5 @@ if not data_actual.empty:
         resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
         st.table(resumen)
     except: st.table(data_actual.iloc[::-1].head(5))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
