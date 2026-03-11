@@ -1,72 +1,120 @@
 import streamlit as st
 import pandas as pd
 
-# 1. --- CONFIGURACIÓN DE LA CARTA (Editá esto fácil) ---
-# Podés agregar o quitar lo que quieras siguiendo el formato "Nombre": Precio
+# 1. --- CARTA COMPLETA (Extraída de tus archivos) ---
 CARTA = {
-    "Cerveza Pinta": 4200,
-    "Cerveza Media": 2800,
-    "Gin Tonic": 5500,
-    "Fernet con Coca": 5800,
-    "Gaseosa / Agua": 2200,
-    "Papas Fritas": 4500,
-    "Burger Completa": 8500,
-    "Pizza Muzzarella": 7000
+    "Cervezas 🍺": {
+        "Pinta Artesanal Visionaire": 5500,
+        "Pinta Artesanal Premium": 6800,
+        "Heineken Monjita": 6500,
+        "Heineken Balde x6": 35000,
+        "Imperial Lata (Roja/IPA/APA/Lager)": 5500,
+        "Golden (Visio/Calvu)": 5900,
+        "Honey Visio": 5900,
+        "IPA Visio": 6500,
+        "Irish Red / Caramel / Frutos Rojos": 7000,
+        "Amber Lager": 7000,
+        "Session IPA / APA / EPA": 7500,
+        "Scottish / Stout / Barley": 7800,
+        "Lemon Kush": 8000
+    },
+    "Tragos 🍸": {
+        "Fernet Branca": 6500,
+        "Aperol Spritz": 7500,
+        "Gin Tonic Malandra (Vaso)": 5500,
+        "Gin Tonic Malandra (Copón)": 7000,
+        "Gin Tonic Importado": 9000,
+        "Mojito / Caipirinha / Caipiroska": 7500,
+        "Jager Bomb / Julep": 11500,
+        "Negroni": 8800,
+        "Cynar Julep": 7000,
+        "Gancia Batido": 6500,
+        "Cuba Libre": 7000,
+        "Coctelería de Autor (Cualquiera)": 11500,
+        "Vinos (Promedio)": 18700
+    },
+    "Bebidas sin Alcohol 🥤": {
+        "Gaseosa chica": 3800,
+        "Agua sin/con gas": 3800,
+        "Agua Saborizada": 3800,
+        "Vaso de Limonada": 3800,
+        "Jarra de Limonada": 13000,
+        "Red Bull": 6000,
+        "Speed": 4600
+    },
+    "Comida 🍕": {
+        "Pizza Mozzarella": 16000,
+        "Pizza Napolitana / Fugazza": 17000,
+        "Pizza Especial Jamón / Calabresa / Caprese / 4 Quesos": 18000,
+        "Pizza Visio (Cheddar/Panceta)": 18900,
+        "Pizza Rúcula y Crudo / Stout (Carne)": 19900,
+        "Adicional Toppings": 2500
+    }
 }
 
 # 2. --- CONFIGURACIÓN DE LA APP ---
-st.set_page_config(page_title="Baring - La Cuenta Clara", page_icon="🍺")
+st.set_page_config(page_title="Baring - La Terminal", page_icon="🍺")
 
-# Estilo personalizado para que se vea más "bar"
+# Estilo visual
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 10px; height: 3em; background-color: #f0a500; color: white; }
+    .stButton>button { width: 100%; border-radius: 10px; height: 3.5em; background-color: #d32f2f; color: white; font-weight: bold; }
+    .stSelectbox label { font-weight: bold; color: #333; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🍺 Baring")
-st.subheader("Festejo de Cumpleaños")
-st.info("Anotá lo que vayas pidiendo para que al final no haya líos con la cuenta.")
+st.title("🍺 Baring @ La Terminal")
+st.write("¡Feliz Cumple! Anotá acá lo que vas pidiendo para que al final la cuenta cierre perfecta.")
 
-# 3. --- BASE DE DATOS EN SESIÓN ---
 if 'consumos' not in st.session_state:
     st.session_state.consumos = []
 
-# 4. --- FORMULARIO DE INVITADO ---
-with st.form("registro", clear_on_submit=True):
-    nombre = st.text_input("Tu nombre (siempre el mismo):", placeholder="Ej: Lucas").strip()
-    item = st.selectbox("¿Qué pediste?", list(CARTA.keys()))
-    submit = st.form_submit_button("¡Anotar a mi cuenta!")
-
-    if submit:
+# 3. --- FORMULARIO ---
+with st.container(border=True):
+    nombre = st.text_input("Tu nombre:", placeholder="Ej: Juan").strip()
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        cat = st.selectbox("Categoría:", list(CARTA.keys()))
+    with col2:
+        prod = st.selectbox("Producto:", list(CARTA[cat].keys()))
+    
+    cant = st.number_input("Cantidad:", min_value=1, max_value=20, value=1)
+    
+    if st.button("Anotar a mi cuenta ➕"):
         if nombre:
+            precio = CARTA[cat][prod]
             st.session_state.consumos.append({
                 "Invitado": nombre,
-                "Producto": item,
-                "Precio": CARTA[item]
+                "Producto": prod,
+                "Cant": cant,
+                "Subtotal": precio * cant
             })
-            st.success(f"✅ Anotado: {item} para {nombre}")
+            st.toast(f"✅ {cant}x {prod} anotado para {nombre}")
         else:
-            st.warning("⚠️ Poné tu nombre para que sepamos quién sos.")
+            st.error("⚠️ Por favor, poné tu nombre.")
 
-# 5. --- RESUMEN FINAL ---
-st.divider()
+# 4. --- RESUMEN ---
 if st.session_state.consumos:
+    st.divider()
     df = pd.DataFrame(st.session_state.consumos)
     
-    # Resumen por persona
-    resumen = df.groupby("Invitado")["Precio"].sum().reset_index()
+    # Tabla resumen por persona
+    resumen = df.groupby("Invitado")["Subtotal"].sum().reset_index()
     resumen.columns = ["Invitado", "Total a Pagar ($)"]
     
-    st.write("### 💵 Resumen de Cuentas")
-    st.dataframe(resumen, use_container_width=True, hide_index=True)
+    st.write("### 💵 Resumen para pagar")
+    st.table(resumen)
     
-    # Detalle total por si hay dudas
-    with st.expander("Ver detalle de pedidos (toda la noche)"):
-        st.table(df)
-        
-    if st.button("❌ Borrar todo (Solo para el cumpleañero)"):
+    # Detalle total
+    with st.expander("Ver detalle de pedidos"):
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        total_general = df["Subtotal"].sum()
+        st.write(f"**Total acumulado en el bar: ${total_general:,}**")
+
+    if st.button("❌ Limpiar todo (Solo cumpleañero)"):
         st.session_state.consumos = []
         st.rerun()
 else:
     st.write("Aún no hay pedidos. ¡Salud! 🥂")
+
