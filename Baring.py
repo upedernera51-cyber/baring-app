@@ -130,8 +130,16 @@ data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
 nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...")
-cat = st.selectbox("Categoría:", list(CARTA.keys()))
-prod = st.selectbox("Producto:", list(CARTA[cat].keys()))
+# 3. --- FORMULARIO (OPTIMIZADO PARA NO ABRIR TECLADO) ---
+with st.container():
+    nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...")
+    
+    # Cambiamos selectbox por radio para categorías: ¡No abre el teclado!
+    cat = st.radio("📂 Seleccioná Categoría:", list(CARTA.keys()), horizontal=True)
+    
+    # Para el producto, mantenemos el selectbox pero con una instrucción de CSS
+    prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()
+prod = st.selectbox("Producto:", list(CARTA[cat].keys()
 
 precio_actual = CARTA[cat][prod]
 st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
@@ -170,6 +178,7 @@ if not data_actual.empty:
     st.subheader("📋 Últimos Pedidos")
     historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
     st.table(historial)
+
 
 
 
