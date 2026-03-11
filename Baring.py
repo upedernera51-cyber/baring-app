@@ -85,34 +85,59 @@ st.title("🍻 BARING NIGHT 🍻")
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
-    "Cervezas 🍺": {
-        "Pinta Artesanal Visionaire": 5500, "Pinta Artesanal Premium": 6800,
-        "Irish Red (Visio)": 7000, "Caramel (Visio)": 7000, "Frutos Rojos (Calvu)": 7000,
-        "Amber Lager (Fermentum)": 7000, "Session IPA (Fermentum)": 7500,
-        "APA (Visio / Fermentum)": 7500, "EPA (Calvu)": 7500, "Scottish (Calvu)": 7800,
-        "Stout (Walmunz)": 7800, "Barley (Walmunz)": 7800, "Lemon Kush (Calvu)": 8000,
-        "Heineken Monjita": 6500, "Heineken Balde x6": 35000, "Imperial Lata": 5500
+    "Birras & Bebidas 🥤": {
+        "Pinta Visionaire": 5500, "Pinta Premium": 6800, "Heineken Monjita": 6500,
+        "Heineken Balde x6": 35000, "Imperial Lata (Variedades)": 5500,
+        "Gaseosa chica": 3800, "Agua con/sin gas": 3800, "Agua Saborizada": 3800,
+        "Vaso Limonada": 3800, "Jarra Limonada": 13000, "Red Bull": 6000, "Speed": 4600
     },
-    "Tragos 🍸": {
-        "Fernet Branca": 6500, "Aperol Spritz": 7500, "Gin Tonic Malandra (Vaso)": 5500,
+    "Tragos Clásicos 🍸": {
+        "Fernet Branca": 6500, "Mojito": 7500, "Mojito Malibú": 8800, "Jager Bomb": 11500,
+        "Jager Julep": 11500, "Cynar Julep": 7000, "Vermouth": 6000, "Gancia": 6500,
+        "Caipirinha / Caipiroska": 7000, "Caipi Malibú": 9000, "Negroni": 8800,
+        "Aperol Spritz": 7500, "Cuba Libre": 7000, "Gin Tonic Malandra (Vaso)": 5500,
         "Gin Tonic Malandra (Copón)": 7000, "Gin Tonic Importado": 9000,
-        "Boulevardier": 7200, "Old Fashioned": 11500, "Penicilin": 7800,
-        "Tom Collins": 7600, "Cuba Libre": 7000, "Red Label": 8000,
-        "Destornillador": 7000, "Jager Bomb / Julep": 11500, "Cynar Julep": 7000,
-        "Vermouth": 6000, "Gancia Batido/Directo": 6500, "Caipirinha / Caipiroska": 7000,
-        "Caipi Malibú": 9000, "Negroni": 8800, "Coctelería de Autor": 11500
+        "Boulevardier": 7200, "Old Fashioned": 11500, "Penicilin": 7800, "Tom Collins": 7600
     },
-    "Bebidas sin Alcohol 🥤": {
-        "Gaseosa chica": 3800, "Agua sin/con gas": 3800, "Agua Saborizada": 3800,
-        "Vaso de Limonada": 3800, "Jarra de Limonada": 13000, "Red Bull": 6000, "Speed": 4600
+    "Coctelería de Autor ✨": {
+        "Chill Apeach": 11500, "Pedacito de Caribe": 11500, "Puka (Baileys/Whisky)": 11500,
+        "Verano Pasión": 11500, "Tercer Ojo (Jager)": 11500, "Dr Jake": 11500,
+        "Malandra Soft": 11500, "Hurrican (Ron)": 11500, "Del Flaco": 11500,
+        "Dobby (Absolut Mango)": 11500, "Tripulante": 11500, "Coco Jamboo": 11500,
+        "Dementor": 11500, "Farsante": 11500, "Hedwig": 11500, "Red Passion": 11500
     },
-    "Comida 🍕🍔🍟": {
+    "Vinos & Espumantes 🍷": {
+        "Lobo Piel de Cordero": 13500, "Eugenio Bustos Dulce": 15000, "Altos del Plata Chardonnay": 16500,
+        "Dieter Meier Puro Torrontés": 18700, "Santa Julia Chardonnay": 18700, "Finca Iral Bonarda": 18700,
+        "El Burro Malbec": 22000, "Luigi Bosca": 23100, "Zuccardi Chardonnay": 27500,
+        "Chandon Extra Brut": 28000, "Baron B": 42000, "Botella Chandon + 3 Speed": 37000
+    },
+    "Papas & Fritos 🍟": {
+        "Papas Clásicas": 9500, "Papas Bravas / Criollas / Cheddar / 4 Quesos / Visio": 9900,
+        "Papas Stout (Carne desmechada)": 10500, "Bastones de Mozzarella": 9900,
+        "Rabas Clásicas": 17500, "Crispy Chicken Fingers": 11900
+    },
+    "Burgers (Doble Carne) 🍔": {
+        "Burger Clásica (Doble)": 13000, "Burger Cheese (Doble)": 13500,
+        "Burger Antipasti / Cuarto de Visio / Caserita": 13990,
+        "Burger Walt Disney / Stout / Rockera / Visio / Kiki": 15000,
+        "Burger Dobby Quinoa (Veggie)": 13000
+    },
+    "Pizzas 🍕": {
         "Pizza Mozzarella": 16000, "Pizza Napolitana / Fugazza": 17000,
-        "Pizza Calabresa / 4 Quesos": 18000, "Pizza Especial / Caprese": 18000,
-        "Pizza Visio (Cheddar/Panceta)": 18900, "Pizza Stout / Rúcula y Crudo": 19900,
-        "Burger Clásica / Cheese (Doble)": 13500, "Burger Antipasti / Cuarto (Doble)": 13990,
-        "Burger Walt Disney / Stout / Rockera": 15000, "Burger Dobby Quinoa (Veggie)": 13000,
-        "Papas Clásicas": 9500, "Papas (Cheddar / Bravas / 4 Quesos)": 9900, "Papas Stout": 10500
+        "Pizza Especial / Calabresa / Caprese / 4 Quesos": 18000,
+        "Pizza Visio (Cheddar/Papas/Panceta)": 18900, "Pizza Stout / Rúcula y Crudo": 19900,
+        "Pizza Mozzarella Sin TACC": 19900, "Adicional Muzza Vegana": 3500
+    },
+    "Entre Panes & Platos 🥪": {
+        "Lomo Cordobés (M)": 15990, "Lomo Cordobés (XL)": 19990, "Lomo Visio (XL)": 20900,
+        "Chegusan de Mila (XL)": 19990, "Vacío Stout (Sándwich)": 15990,
+        "Montadito de Vacío": 13990, "Vacío Ahumado al Plato": 18500, "Entraña al Plato": 19900,
+        "Mila Clásica / Wrap Ternera o Pollo": 13000, "Sorrentinos (Variedades)": 9900,
+        "Lasagna de la Casa": 16500, "Tabla La Visio (Para 2)": 28990, "Tabla La Visio (Para 4)": 39990
+    },
+    "Postres 🍰": {
+        "Budín de Pan / Chocotorta / Choco Brownie": 6500
     }
 }
 
@@ -184,6 +209,7 @@ if not data_actual.empty:
         st.table(historial)
     except:
         st.table(data_actual.iloc[::-1].head(10))
+
 
 
 
