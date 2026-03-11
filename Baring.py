@@ -52,9 +52,15 @@ st.title("🍺 Baring App by Ulises")
 st.write("¡Feliz Cumple! Anotá tus consumos para que la cuenta cierre perfecta.")
 
 # Cargar datos actuales de Google Sheets
+# Reemplaza tu bloque de cargar_datos por este:
 def cargar_datos():
-    return conn.read(worksheet="Hoja1", ttl=0) # ttl=0 para que siempre traiga lo último
-
+    try:
+        # Intentamos leer la hoja. ttl=0 evita que use datos viejos.
+        return conn.read(worksheet="Hoja1", ttl=0)
+    except Exception as e:
+        # Si falla, creamos un DataFrame vacío con los encabezados correctos
+        st.warning("Conectando con la base de datos...")
+        return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
@@ -112,4 +118,5 @@ if not data_actual.empty:
         df_vacio = pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
         conn.update(worksheet="Hoja1", data=df_vacio)
         st.rerun()
+
 
