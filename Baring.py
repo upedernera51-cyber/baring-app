@@ -92,36 +92,37 @@ with st.container(border=True):
         else:
             st.error("⚠️ Por favor, pone tu nombre.")
 
-# 4. --- RESUMEN Y PEDIDOS ---
-# 5. --- RESUMEN Y PEDIDOS (ACTUALIZADO) ---
+# 5. --- RESUMEN Y MOVIMIENTOS (VERSIÓN DEFINITIVA) ---
 if not data_actual.empty:
     st.divider()
     
-    # Intentamos convertir Subtotal a número por las dudas
-    if "Subtotal" in data_actual.columns:
-        data_actual["Subtotal"] = pd.to_numeric(data_actual["Subtotal"], errors='coerce').fillna(0)
-        
-        # Tabla de Totales
-        st.subheader("💵 Totales por persona")
-        resumen = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
+    # Intentamos renombrar columnas por posición por si fallan los nombres originales
+    # Col 0: Invitado, Col 1: Producto, Col 2: Cant, Col 3: Subtotal
+    df_fix = data_actual.copy()
+    if df_fix.shape[1] >= 4:
+        df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+    
+    # --- TABLA DE TOTALES ---
+    st.subheader("💵 Totales por persona")
+    try:
+        df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
+        resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
         resumen.columns = ["Invitado", "Total ($)"]
         resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
         st.table(resumen)
+    except Exception as e:
+        st.error("Error calculando totales. Revisá que el Excel tenga números en la columna D.")
 
-    # Tabla de Historial (Siempre visible si hay datos)
+    # --- TABLA DE MOVIMIENTOS (HISTORIAL) ---
     st.subheader("📋 Últimos movimientos")
+    # Mostramos los pedidos más recientes (últimos 15)
+    historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(15)
     
-    # Seleccionamos solo las columnas que queremos mostrar para que entre en el celu
-    columnas_visibles = [col for col in ["Invitado", "Producto", "Cant"] if col in data_actual.columns]
-    
-    if columnas_visibles:
-        # Mostramos los últimos 10 pedidos, los más nuevos arriba
-        historial = data_actual[columnas_visibles].iloc[::-1].head(10)
-        st.dataframe(historial, use_container_width=True, hide_index=True)
-    else:
-        st.write("No hay columnas para mostrar")
+    # Usamos st.table en vez de dataframe para que en el celu sea más fácil de leer
+    st.table(historial)
+
 else:
-    st.info("Aún no hay pedidos. ¡Sé el primero en anotar!")
+    st.info("Aún no hay pedidos registrados.")
 
 
 
