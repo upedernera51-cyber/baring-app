@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+import time
 
 # 1. --- CARTA ---
 CARTA = {
@@ -113,6 +114,7 @@ if not data_actual.empty and "Subtotal" in data_actual.columns:
     
     with st.expander("Ver detalle"):
         st.dataframe(data_actual, use_container_width=True, hide_index=True)
+
 
 
 
