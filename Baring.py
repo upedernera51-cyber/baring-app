@@ -64,15 +64,23 @@ URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
     "Birras Artesanales 🍺": {
-        "Pinta Calvu (Frutos Rojos/EPA/Scottish/L.Kush)": 7500,
-        "Pinta Fermentum (Amber/Session IPA/APA)": 7500,
-        "Pinta Visionaire (Irish/Caramel/APA)": 7000,
-        "Pinta Walmunz (Stout/Barley)": 7800,
+        "Calvu Frutos Rojos": 7500,
+        "Calvu EPA": 7500,
+        "Calvu Scottish": 7500,
+        "Calvu Lemon Kush": 7500,
+        "Fermentum Amber Lager": 7500,
+        "Fermentum Session IPA": 7500,
+        "Fermentum APA": 7500,
+        "Visionaire Irish": 7000,
+        "Visionaire Caramel": 7000,
+        "Visionaire APA": 7000,
+        "Walmunz Stout": 7800,
+        "Walmunz Barley Wine": 7800,
         "Pinta Visionaire (Clásica)": 5500,
         "Pinta Premium": 6800,
         "Heineken Monjita": 6500,
         "Heineken Balde x6": 35000,
-        "Imperial Lata (Variedades)": 5500
+        "Imperial Lata": 5500
     },
     "Coctelería & Tragos 🍸": {
         "Fernet Branca": 6500, "Gin Tonic Malandra": 7000, "Aperol Spritz": 7500,
@@ -111,7 +119,6 @@ CARTA = {
         "Jarra Limonada": 13000, "Red Bull / Speed": 5000, "Postre": 6500
     }
 }
-
 @st.cache_data(ttl=60)
 def cargar_datos():
     try:
@@ -169,6 +176,7 @@ if not data_actual.empty:
         resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
         st.table(resumen)
     except: st.table(data_actual.iloc[::-1].head(5))
+
 
 
 
