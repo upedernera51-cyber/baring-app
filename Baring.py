@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-# 1. --- CARTA COMPLETA (Extraída de tus archivos) ---
+# 1. --- CARTA COMPLETA (Sincronizada con tus fotos y PDF) ---
 CARTA = {
     "Cervezas 🍺": {
         "Pinta Artesanal Visionaire": 5500,
         "Pinta Artesanal Premium": 6800,
         "Heineken Monjita": 6500,
         "Heineken Balde x6": 35000,
-        "Imperial Lata (Roja/IPA/APA/Lager)": 5500,
+        "Imperial Lata": 5500,
         "Golden (Visio/Calvu)": 5900,
         "Honey Visio": 5900,
         "IPA Visio": 6500,
@@ -30,8 +30,7 @@ CARTA = {
         "Cynar Julep": 7000,
         "Gancia Batido": 6500,
         "Cuba Libre": 7000,
-        "Coctelería de Autor (Cualquiera)": 11500,
-        "Vinos (Promedio)": 18700
+        "Coctelería de Autor": 11500
     },
     "Bebidas sin Alcohol 🥤": {
         "Gaseosa chica": 3800,
@@ -42,54 +41,39 @@ CARTA = {
         "Red Bull": 6000,
         "Speed": 4600
     },
-"Comida 🍕": {
-        # --- Hamburguesas (Precios Doble/Completa) ---
-        "Burger Clásica (Doble)": 13000,
-        "Burger La Cheese (Doble)": 13500,
-        "Burger La Antipasti (Doble)": 13990,
-        "Burger Cuarto de Visio (Doble)": 13990,
-        "Burger Walt Disney": 15000,
-        "Burger La Stout": 15000,
-        "Burger La Kiki (Pollo)": 15000,
-        "Burger La Rockera": 15000,
-        "Burger La Visio": 15000,
-        "Burger Dobby Quinoa (Vegetariana)": 13000,
-        # --- Papas de todo tipo ---
+    "Comida 🍕🍔🍟": {
+        "Burger Clásica / Cheese (Doble)": 13500,
+        "Burger Antipasti / Cuarto (Doble)": 13990,
+        "Burger Walt Disney / Stout / Rockera": 15000,
+        "Burger Dobby Quinoa (Veggie)": 13000,
         "Papas Clásicas": 9500,
-        "Papas Bravas": 9900,
-        "Papas Criollas": 9900,
-        "Papas con Cheddar": 9900,
-        "Papas Cuatro Quesos": 9900,
+        "Papas (Cheddar / Bravas / 4 Quesos)": 9900,
         "Papas Stout (Carne desmechada)": 10500,
-        "Papas Visio (Panceta y Verdeo)": 9900,
-        # --- Pizzas ---
         "Pizza Mozzarella": 16000,
         "Pizza Napolitana / Fugazza": 17000,
-        "Pizza Especial (Jamón/Calabresa/Caprese)": 18000,
+        "Pizza Especial / Caprese": 18000,
         "Pizza Visio (Cheddar/Panceta)": 18900,
-        "Pizza Stout (Carne desmechada)": 19900,
-        "Pizza Rúcula y Crudo": 19900
-    }    }
-
+        "Pizza Stout / Rúcula y Crudo": 19900
+    }
+}
 
 # 2. --- CONFIGURACIÓN DE LA APP ---
 st.set_page_config(page_title="Baring - La Terminal", page_icon="🍺")
 
-# Estilo visual
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 10px; height: 3.5em; background-color: #d32f2f; color: white; font-weight: bold; }
-    .stSelectbox label { font-weight: bold; color: #333; }
+    .price-tag { font-size: 24px; color: #1e88e5; font-weight: bold; text-align: center; border: 2px solid #1e88e5; border-radius: 10px; padding: 10px; margin: 10px 0; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍺 Baring @ La Terminal")
-st.write("¡Feliz Cumple! Anotá acá lo que vas pidiendo para que al final la cuenta cierre perfecta.")
+st.write("¡Feliz Cumple! Anotá tus pedidos para que la cuenta cierre perfecta.")
 
 if 'consumos' not in st.session_state:
     st.session_state.consumos = []
 
-# 3. --- FORMULARIO ---
+# 3. --- FORMULARIO CON VISOR DE PRECIO ---
 with st.container(border=True):
     nombre = st.text_input("Tu nombre:", placeholder="Ej: Juan").strip()
     
@@ -99,41 +83,40 @@ with st.container(border=True):
     with col2:
         prod = st.selectbox("Producto:", list(CARTA[cat].keys()))
     
+    # --- LA MAGIA: EL VISOR DE PRECIO ---
+    precio_actual = CARTA[cat][prod]
+    st.markdown(f'<div class="price-tag">Precio Unitario: ${precio_actual:,}</div>', unsafe_allow_html=True)
+    
     cant = st.number_input("Cantidad:", min_value=1, max_value=20, value=1)
     
     if st.button("Anotar a mi cuenta ➕"):
         if nombre:
-            precio = CARTA[cat][prod]
             st.session_state.consumos.append({
-                "Invitado": nombre,
-                "Producto": prod,
-                "Cant": cant,
-                "Subtotal": precio * cant
+                "Invitado": nombre, "Producto": prod, "Cant": cant, "Subtotal": precio_actual * cant
             })
-            st.toast(f"✅ {cant}x {prod} anotado para {nombre}")
+            st.toast(f"✅ {cant}x {prod} anotado.")
         else:
-            st.error("⚠️ Por favor, poné tu nombre.")
+            st.error("⚠️ Poné tu nombre.")
 
-# 4. --- RESUMEN ---
+# 4. --- TABLAS DE RESULTADOS ---
 if st.session_state.consumos:
     st.divider()
     df = pd.DataFrame(st.session_state.consumos)
     
-    # Tabla resumen por persona
+    # Resumen por invitado
     resumen = df.groupby("Invitado")["Subtotal"].sum().reset_index()
     resumen.columns = ["Invitado", "Total a Pagar ($)"]
     
     st.write("### 💵 Resumen para pagar")
     st.table(resumen)
     
-    # Detalle total
     with st.expander("Ver detalle de pedidos"):
         st.dataframe(df, use_container_width=True, hide_index=True)
-        total_general = df["Subtotal"].sum()
-        st.write(f"**Total acumulado en el bar: ${total_general:,}**")
+        st.write(f"**Total acumulado en el bar: ${df['Subtotal'].sum():,}**")
 
     if st.button("❌ Limpiar todo (Solo cumpleañero)"):
         st.session_state.consumos = []
         st.rerun()
+
 
 
