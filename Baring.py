@@ -57,6 +57,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🍻 BARING 🍻")
+st.markdown('<p class="signature">by Ulises</p>', unsafe_allow_html=True)
 
 # 2. --- CARTA COMPLETA ---
 URL_SCRIPT = st.secrets["api_url"]
@@ -171,6 +172,7 @@ if not data_actual.empty:
         
     except:
         st.info("Cargando historial de pedidos...")
+
 
 
 
