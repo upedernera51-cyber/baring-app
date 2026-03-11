@@ -4,7 +4,7 @@ import requests
 import json
 import time
 
-# 1. --- CARTA ACTUALIZADA ---
+# 1. --- CARTA ---
 CARTA = {
     "Cervezas 🍺": {
         "Pinta Artesanal Visionaire": 5500, "Pinta Artesanal Premium": 6800,
@@ -38,20 +38,21 @@ CARTA = {
 }
 
 # 2. --- CONFIGURACIÓN ---
-st.set_page_config(page_title="Baring App by Ulises", page_icon="🍺")
+st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 URL_SCRIPT = st.secrets["api_url"]
 
+# CSS optimizado para celular
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 10px; height: 3.5em; background-color: #d32f2f; color: white; font-weight: bold; }
-    .price-tag { font-size: 22px; color: #1e88e5; font-weight: bold; text-align: center; border: 2px solid #1e88e5; border-radius: 10px; padding: 10px; margin: 10px 0; background-color: #f0f7ff; }
+    .stButton>button { width: 100%; border-radius: 12px; height: 3.5em; background-color: #d32f2f; color: white; font-weight: bold; font-size: 18px; }
+    .price-tag { font-size: 24px; color: #1e88e5; font-weight: bold; text-align: center; border: 2px solid #1e88e5; border-radius: 12px; padding: 10px; margin: 10px 0; background-color: #f0f7ff; }
+    [data-testid="stMetricValue"] { font-size: 24px; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🍺 Baring App by Ulises")
+st.title("🍺 Baring App")
 
-# 3. --- CARGA DE DATOS CON CACHÉ ---
-@st.cache_data(ttl=120)  # Mantiene los datos en memoria por 2 minutos para máxima velocidad
+@st.cache_data(ttl=120)
 def cargar_datos():
     try:
         r = requests.get(URL_SCRIPT, timeout=5)
@@ -64,62 +65,57 @@ def cargar_datos():
 
 data_actual = cargar_datos()
 
-# 4. --- FORMULARIO ---
+# 3. --- FORMULARIO DE PEDIDO ---
 with st.container(border=True):
-    nombre = st.text_input("Tu nombre:", placeholder="Ej: Juan").strip()
-    col1, col2 = st.columns(2)
-    with col1:
-        cat = st.selectbox("Categoría:", list(CARTA.keys()))
-    with col2:
-        prod = st.selectbox("Producto:", list(CARTA[cat].keys()))
+    nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?").strip()
+    cat = st.selectbox("📂 Categoría:", list(CARTA.keys()))
+    prod = st.selectbox("🍕 Producto:", list(CARTA[cat].keys()))
     
     precio_actual = CARTA[cat][prod]
-    st.markdown(f'<div class="price-tag">Precio: ${precio_actual:,}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
     
-    cant = st.number_input("Cantidad:", min_value=1, max_value=20, value=1)
+    cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
     
-    if st.button("Anotar a mi cuenta ➕"):
+    if st.button("¡ANOTAR PEDIDO! ➕"):
         if nombre:
-            payload = {
-                "Invitado": nombre,
-                "Producto": prod,
-                "Cant": int(cant),
-                "Subtotal": int(precio_actual * cant)
-            }
-            with st.spinner("Anotando..."):
+            payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
+            with st.spinner("Enviando a la barra..."):
                 try:
-                    # Enviamos los datos a Google
                     requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                    # LIMPIAMOS EL CACHÉ: Esto obliga a la app a leer el Sheet nuevo ahora mismo
                     st.cache_data.clear()
                 except:
-                    # Si falla la respuesta, igual limpiamos caché por si el dato entró
                     st.cache_data.clear()
                 
-                st.success(f"¡Listo {nombre}, anotado!")
-                time.sleep(1.2)
+                st.success(f"¡Anotado, {nombre}!")
+                time.sleep(1)
                 st.rerun()
         else:
-            st.error("⚠️ Por favor, poné tu nombre.")
+            st.error("⚠️ Por favor, pone tu nombre.")
 
-# 5. --- RESUMEN DE CUENTAS ---
+# 4. --- RESUMEN Y PEDIDOS ---
 if not data_actual.empty and "Subtotal" in data_actual.columns:
     st.divider()
-    # Aseguramos que Subtotal sea número para sumar correctamente
     data_actual["Subtotal"] = pd.to_numeric(data_actual["Subtotal"], errors='coerce').fillna(0)
     
+    # Tabla 1: Totales por persona
     resumen = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
     resumen.columns = ["Invitado", "Total ($)"]
-    
-    # Formateamos los números para que se vean lindos con el signo $
     resumen_visual = resumen.copy()
     resumen_visual["Total ($)"] = resumen_visual["Total ($)"].map("${:,.0f}".format)
     
-    st.write("### 💵 Totales por persona")
+    st.subheader("💵 Totales")
     st.table(resumen_visual)
-    
-    with st.expander("Ver detalle de todos los consumos"):
-        st.dataframe(data_actual, use_container_width=True, hide_index=True)
+
+    # Tabla 2: Últimos pedidos (Lo que me pediste)
+    st.subheader("📋 Historial de pedidos")
+    # Mostramos los últimos pedidos arriba
+    pedidos_invertidos = data_actual.iloc[::-1] 
+    st.dataframe(
+        pedidos_invertidos[["Invitado", "Producto", "Cant"]], 
+        use_container_width=True, 
+        hide_index=True
+    )
+
 
 
 
