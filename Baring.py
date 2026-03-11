@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-from streamlit_gsheets import GSheetsConnection
+import requests
+import json
 
-# 1. --- CARTA FINAL ---
+# 1. --- CARTA ACTUALIZADA ---
 CARTA = {
     "Cervezas 🍺": {
         "Pinta Artesanal Visionaire": 5500, "Pinta Artesanal Premium": 6800,
@@ -35,10 +36,9 @@ CARTA = {
     }
 }
 
+# 2. --- CONFIGURACIÓN ---
 st.set_page_config(page_title="Baring App by Ulises", page_icon="🍺")
-
-# Intentar conexión
-conn = st.connection("gsheets", type=GSheetsConnection)
+URL_SCRIPT = st.secrets["api_url"]
 
 st.markdown("""
     <style>
@@ -49,10 +49,16 @@ st.markdown("""
 
 st.title("🍺 Baring App by Ulises")
 
-# Función segura para leer
+# Función para leer datos del Google Script
 def cargar_datos():
     try:
-        return conn.read(worksheet="Hoja1", ttl=0)
+        r = requests.get(URL_SCRIPT, timeout=10)
+        json_data = r.json()
+        if len(json_data) > 1:
+            df = pd.DataFrame(json_data[1:], columns=json_data[0])
+            return df
+        else:
+            return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
     except:
         return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 
@@ -69,36 +75,41 @@ with st.container(border=True):
     
     precio_actual = CARTA[cat][prod]
     st.markdown(f'<div class="price-tag">Precio: ${precio_actual:,}</div>', unsafe_allow_html=True)
+    
     cant = st.number_input("Cantidad:", min_value=1, max_value=20, value=1)
     
     if st.button("Anotar a mi cuenta ➕"):
         if nombre:
-            nueva_fila = pd.DataFrame([{
-                "Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)
-            }])
-            
-            # UNIÓN DE DATOS
-            df_actualizado = pd.concat([data_actual, nueva_fila], ignore_index=True)
-            
-            # EL CAMBIO CLAVE: Intentar actualizar con manejo de error
+            # Preparamos los datos para enviar
+            payload = {
+                "Invitado": nombre,
+                "Producto": prod,
+                "Cant": int(cant),
+                "Subtotal": int(precio_actual * cant)
+            }
             try:
-                conn.update(worksheet="Hoja1", data=df_actualizado)
-                st.success(f"✅ ¡Anotado en la cuenta de {nombre}!")
+                # Enviamos el POST al script de Google
+                requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=10)
+                st.success(f"✅ ¡Anotado para {nombre}!")
                 st.rerun()
-            except Exception as e:
-                st.error("Error de permisos en Google Sheets. Revisá que esté en modo 'Editor' para todos.")
+            except:
+                st.error("Error al conectar con la base de datos.")
         else:
             st.error("⚠️ Por favor, poné tu nombre.")
 
 # 4. --- RESUMEN ---
 if not data_actual.empty:
     st.divider()
+    # Convertimos a número para poder sumar
+    data_actual["Subtotal"] = pd.to_numeric(data_actual["Subtotal"], errors='coerce')
+    
     resumen = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
     resumen.columns = ["Invitado", "Total a Pagar ($)"]
-    st.write("### 💵 Resumen de la cuenta")
+    
+    st.write("### 💵 Resumen para pagar")
     st.table(resumen)
     
-    with st.expander("Ver detalle"):
+    with st.expander("Ver detalle de todos los pedidos"):
         st.dataframe(data_actual, use_container_width=True, hide_index=True)
 
 
