@@ -130,21 +130,35 @@ data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
 nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...")
-# 3. --- FORMULARIO (OPTIMIZADO PARA NO ABRIR TECLADO) ---
+# 3. --- FORMULARIO (OPTIMIZADO PARA CELULAR) ---
 with st.container():
     nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...")
     
-    # Cambiamos selectbox por radio para categorías: ¡No abre el teclado!
-    cat = st.radio("📂 Seleccioná Categoría:", list(CARTA.keys()), horizontal=True)
+    # Categorías en horizontal para que sea tocar y listo
+    cat = st.radio("📂 Categoría:", list(CARTA.keys()), horizontal=True)
     
-    # Para el producto, mantenemos el selectbox pero con una instrucción de CSS
-    prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()
-prod = st.selectbox("Producto:", list(CARTA[cat].keys()
-
-precio_actual = CARTA[cat][prod]
-st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
-
-cant = st.number_input("Cantidad:", 1, 10, 1)
+    # Selector de producto (aseguramos cerrar todos los paréntesis)
+    prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()))
+    
+    precio_actual = CARTA[cat][prod]
+    st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
+    
+    cant = st.number_input("Cantidad:", 1, 10, 1)
+    
+    if st.button("¡PEDIR AHORA! 🚀"):
+        if nombre:
+            payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
+            with st.spinner("Anotando..."):
+                try:
+                    requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
+                    st.cache_data.clear()
+                except:
+                    st.cache_data.clear()
+                st.success(f"✅ ¡Anotado, {nombre}!")
+                time.sleep(1)
+                st.rerun()
+        else:
+            st.error("⚠️ Poné tu nombre.")
 
 if st.button("¡PEDIR AHORA! 🚀"):
     if nombre:
@@ -178,6 +192,7 @@ if not data_actual.empty:
     st.subheader("📋 Últimos Pedidos")
     historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
     st.table(historial)
+
 
 
 
