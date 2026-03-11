@@ -7,36 +7,26 @@ import time
 # 1. --- CONFIGURACIÓN Y ESTÉTICA FORZADA ---
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
-# Inyectamos el CSS sin el prefijo 'f' para evitar conflictos con las llaves de Python
-# 1. --- ESTÉTICA CORREGIDA (PARA SCROLL EN CELULAR) ---
 st.markdown("""
     <style>
-    /* 1. FONDO QUE PERMITE SCROLL */
     .stApp {
         background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
                     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop") !important;
         background-size: cover !important;
         background-position: center !important;
-        /* Quitamos 'fixed' para que el celu no se trabe al deslizar */
         background-attachment: scroll !important; 
     }
-
-    /* 2. FORZAR LETRAS BLANCAS */
     .stMarkdown p, .stTextInput label, .stSelectbox label, .stNumberInput label, label p, .stAlert p {
         color: white !important;
         font-size: 18px !important;
         font-weight: 600 !important;
         text-shadow: 1px 1px 2px black !important;
     }
-
-    /* 3. TÍTULOS */
     h1, h2, h3, .stSubheader {
         color: #FFB300 !important;
         text-align: center !important;
         text-shadow: 2px 2px 4px #000000 !important;
     }
-
-    /* 4. PRECIO RESALTADO */
     .price-tag {
         font-size: 35px !important;
         color: #FFB300 !important;
@@ -48,8 +38,6 @@ st.markdown("""
         border-radius: 15px !important;
         background: rgba(0,0,0,0.6) !important;
     }
-
-    /* 5. BOTÓN AMBAR */
     .stButton>button {
         background-color: #FFB300 !important;
         color: black !important;
@@ -58,29 +46,25 @@ st.markdown("""
         border-radius: 15px !important;
         height: 3.5em !important;
         border: none !important;
-        margin-top: 10px !important;
     }
-    
-    /* 6. TABLAS */
     .stTable {
         background-color: rgba(255, 255, 255, 0.1) !important;
         border-radius: 10px !important;
-        overflow-x: auto !important; /* Permite deslizar tablas anchas */
     }
     th { color: #FFB300 !important; background-color: rgba(0,0,0,0.5) !important; }
     td { color: white !important; background-color: rgba(0,0,0,0.3) !important; }
-
-    /* Forzar visibilidad en inputs del celu */
-    div[data-baseweb="select"] {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border-radius: 10px !important;
+    
+    /* Hack para evitar el teclado en el selectbox */
+    div[data-baseweb="select"] input {
+        caret-color: transparent !important;
+        inputmode: none !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍻 BARING NIGHT 🍻")
 
-# 2. --- DATOS Y CARTA (CORREGIDA) ---
+# 2. --- DATOS Y CARTA ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
@@ -129,15 +113,9 @@ def cargar_datos():
 data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
-nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...")
-# 3. --- FORMULARIO (OPTIMIZADO PARA CELULAR) ---
 with st.container():
-    nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...")
-    
-    # Categorías en horizontal para que sea tocar y listo
+    nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
     cat = st.radio("📂 Categoría:", list(CARTA.keys()), horizontal=True)
-    
-    # Selector de producto (aseguramos cerrar todos los paréntesis)
     prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()))
     
     precio_actual = CARTA[cat][prod]
@@ -145,10 +123,10 @@ with st.container():
     
     cant = st.number_input("Cantidad:", 1, 10, 1)
     
-    if st.button("¡PEDIR AHORA! 🚀"):
+    if st.button("¡ANOTAR PEDIDO! 🚀"):
         if nombre:
             payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-            with st.spinner("Anotando..."):
+            with st.spinner("Enviando..."):
                 try:
                     requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
                     st.cache_data.clear()
@@ -158,40 +136,30 @@ with st.container():
                 time.sleep(1)
                 st.rerun()
         else:
-            st.error("⚠️ Poné tu nombre.")
+            st.warning("⚠️ Poné tu nombre para la cuenta.")
 
-if st.button("¡PEDIR AHORA! 🚀"):
-    if nombre:
-        payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-        with st.spinner("Anotando..."):
-            try:
-                requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                st.cache_data.clear()
-            except:
-                st.cache_data.clear()
-            st.success(f"✅ ¡Anotado, {nombre}!")
-            time.sleep(1)
-            st.rerun()
-    else:
-        st.error("⚠️ Poné tu nombre.")
-
-# 4. --- TABLAS ---
+# 4. --- RESUMEN Y TABLAS ---
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
-    if df_fix.shape[1] >= 4:
-        df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+    
+    try:
+        if df_fix.shape[1] >= 4:
+            df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+        
+        st.subheader("💰 Resumen")
+        df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
+        resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
+        resumen.columns = ["Invitado", "Total ($)"]
+        resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
+        st.table(resumen)
 
-    st.subheader("💰 Resumen")
-    df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
-    resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
-    resumen.columns = ["Invitado", "Total ($)"]
-    resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
-    st.table(resumen)
+        st.subheader("📋 Últimos Pedidos")
+        historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
+        st.table(historial)
+    except:
+        st.table(data_actual.iloc[::-1].head(10))
 
-    st.subheader("📋 Últimos Pedidos")
-    historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
-    st.table(historial)
 
 
 
