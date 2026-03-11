@@ -4,69 +4,81 @@ import requests
 import json
 import time
 
-# 1. --- CONFIGURACIÓN Y ESTÉTICA ---
+# 1. --- CONFIGURACIÓN Y ESTÉTICA DE FONDO ---
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
-# URL de imagen de fondo/encabezado (Podés cambiar este link por el de tu logo o foto)
-IMG_URL = "https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop"
+# URL de la imagen de fondo (Podés cambiarla por una de una barra de bar o madera)
+IMG_FONDO = "https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop"
 
 st.markdown(f"""
     <style>
-    /* Fondo general */
+    /* Imagen de fondo fija */
     .stApp {{
-        background-color: #121212;
-        color: #FFFFFF;
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("{IMG_FONDO}");
+        background-size: cover;
+        background-attachment: fixed;
     }}
-    /* Títulos y Subtítulos */
+    
+    /* Forzar color blanco en todas las etiquetas (Labels) */
+    label, .stMarkdown, p, .stSelectbox label, .stTextInput label {{
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+    }}
+
+    /* Títulos en dorado/ámbar */
     h1, h2, h3 {{
         color: #FFB300 !important;
+        text-shadow: 2px 2px 4px #000000;
         text-align: center;
-        font-family: 'Courier New', Courier, monospace;
     }}
-    /* El contenedor del formulario */
-    [data-testid="stHeader"] {{
-        background: rgba(0,0,0,0);
-    }}
-    .st-expander, .stContainer {{
-        border: 1px solid #FFB300 !important;
-        background-color: #1E1E1E !important;
+
+    /* Contenedor semi-transparente para el formulario */
+    [data-testid="stVerticalBlock"] > div:has(div.stForm) {{
+        background-color: rgba(30, 30, 30, 0.85);
+        padding: 20px;
         border-radius: 15px;
+        border: 1px solid #FFB300;
     }}
-    /* Botón estilo "Pinta" */
+    
+    /* Estilo del botón */
     .stButton>button {{
         width: 100%;
         border-radius: 12px;
         height: 3.5em;
-        background-color: #FFB300 !important; /* Ámbar Cerveza */
+        background-color: #FFB300 !important;
         color: #000000 !important;
         font-weight: bold;
         font-size: 20px;
         border: none;
-        box-shadow: 0px 4px 15px rgba(255, 179, 0, 0.3);
     }}
-    .stButton>button:hover {{
-        background-color: #FFA000 !important;
-        transform: scale(1.02);
-    }}
-    /* Etiqueta de precio */
+
+    /* Precio resaltado */
     .price-tag {{
-        font-size: 28px;
+        font-size: 32px;
         color: #FFB300;
         font-weight: bold;
         text-align: center;
-        margin: 15px 0;
-        text-shadow: 2px 2px 4px #000000;
-    }}
-    /* Tablas estilo pizarra */
-    .stTable {{
-        background-color: #1E1E1E;
+        margin: 10px 0;
+        background: rgba(0,0,0,0.5);
         border-radius: 10px;
+        padding: 5px;
+    }}
+
+    /* Tablas con fondo oscuro */
+    .stTable {{
+        background-color: rgba(30, 30, 30, 0.9);
+        border-radius: 10px;
+        color: white !important;
+    }}
+    
+    /* Ajuste para que el texto dentro de la tabla sea blanco */
+    .stTable td, .stTable th {{
+        color: white !important;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# Banner de bienvenida
-st.image(IMG_URL, use_container_width=True)
 st.title("🍻 BARING NIGHT 🍻")
 
 # 2. --- DATOS Y CARTA ---
@@ -92,7 +104,7 @@ CARTA = {
     }
 }
 
-@st.cache_data(ttl=120)
+@st.cache_data(ttl=60)
 def cargar_datos():
     try:
         r = requests.get(URL_SCRIPT, timeout=5)
@@ -107,7 +119,7 @@ data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
 with st.container():
-    nombre = st.text_input("📝 ¿Quién pide?", placeholder="Tu nombre...").strip()
+    nombre = st.text_input("📝 ¿Quién pide?", placeholder="Escribí tu nombre...").strip()
     cat = st.selectbox("Categoría:", list(CARTA.keys()))
     prod = st.selectbox("Producto:", list(CARTA[cat].keys()))
     
@@ -125,11 +137,11 @@ with st.container():
                     st.cache_data.clear()
                 except:
                     st.cache_data.clear()
-                st.success(f"✅ ¡Excelente, {nombre}!")
+                st.success(f"✅ ¡Anotado, {nombre}!")
                 time.sleep(1)
                 st.rerun()
         else:
-            st.warning("⚠️ Necesito tu nombre para la cuenta.")
+            st.warning("⚠️ Poné tu nombre para saber a quién cobrarle.")
 
 # 4. --- RESUMEN ---
 if not data_actual.empty:
@@ -148,6 +160,7 @@ if not data_actual.empty:
     st.subheader("📋 Últimos Pedidos")
     historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
     st.table(historial)
+
 
 
 
