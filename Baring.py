@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 import json
 
-# 1. --- CARTA ACTUALIZADA ---
+# 1. --- CARTA ---
 CARTA = {
     "Cervezas 🍺": {
         "Pinta Artesanal Visionaire": 5500, "Pinta Artesanal Premium": 6800,
@@ -36,7 +36,6 @@ CARTA = {
     }
 }
 
-# 2. --- CONFIGURACIÓN ---
 st.set_page_config(page_title="Baring App by Ulises", page_icon="🍺")
 URL_SCRIPT = st.secrets["api_url"]
 
@@ -49,22 +48,19 @@ st.markdown("""
 
 st.title("🍺 Baring App by Ulises")
 
-# Función para leer datos del Google Script
 def cargar_datos():
     try:
         r = requests.get(URL_SCRIPT, timeout=10)
         json_data = r.json()
         if len(json_data) > 1:
-            df = pd.DataFrame(json_data[1:], columns=json_data[0])
-            return df
-        else:
-            return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
+            return pd.DataFrame(json_data[1:], columns=json_data[0])
     except:
-        return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
+        pass
+    return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 
 data_actual = cargar_datos()
 
-# 3. --- FORMULARIO ---
+# FORMULARIO
 with st.container(border=True):
     nombre = st.text_input("Tu nombre:", placeholder="Ej: Juan").strip()
     col1, col2 = st.columns(2)
@@ -75,45 +71,35 @@ with st.container(border=True):
     
     precio_actual = CARTA[cat][prod]
     st.markdown(f'<div class="price-tag">Precio: ${precio_actual:,}</div>', unsafe_allow_html=True)
-    
-    cant = st.number_input("Cantidad:", min_value=1, max_value=20, value=1)
+    cant = st.number_input("Cantidad:", 1, 20, 1)
     
     if st.button("Anotar a mi cuenta ➕"):
         if nombre:
-            payload = {
-                "Invitado": nombre,
-                "Producto": prod,
-                "Cant": int(cant),
-                "Subtotal": int(precio_actual * cant)
-            }
-            # Usamos un spinner para que el usuario sepa que está trabajando
+            payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
             with st.spinner("Anotando..."):
                 try:
-                    # Enviamos los datos
                     requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=10)
-                    
-                    # Logramos que Streamlit ignore cualquier respuesta extraña de Google
-                    st.toast(f"✅ ¡Anotado para {nombre}!")
-                    st.rerun() 
+                    st.toast("✅ ¡Anotado!")
+                    st.rerun()
                 except:
-                    # Solo mostramos error si realmente no se pudo enviar el dato
-                    st.error("Hubo un problema de conexión, pero chequeá el Sheet.")
+                    st.rerun() # Refrescamos igual porque a veces el dato llega aunque falle la rta
         else:
             st.error("⚠️ Por favor, poné tu nombre.")
 
-# 4. --- RESUMEN ---
-if not data_actual.empty:
+# RESUMEN (Aquí corregimos el KeyError)
+if not data_actual.empty and "Subtotal" in data_actual.columns:
     st.divider()
-    # Convertimos a número para poder sumar
-    data_actual["Subtotal"] = pd.to_numeric(data_actual["Subtotal"], errors='coerce')
+    # Limpieza de datos antes de calcular
+    data_actual["Subtotal"] = pd.to_numeric(data_actual["Subtotal"], errors='coerce').fillna(0)
     
     resumen = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
-    resumen.columns = ["Invitado", "Total a Pagar ($)"]
+    resumen.columns = ["Invitado", "Total ($)"]
+    resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
     
     st.write("### 💵 Resumen para pagar")
     st.table(resumen)
     
-    with st.expander("Ver detalle de todos los pedidos"):
+    with st.expander("Ver detalle"):
         st.dataframe(data_actual, use_container_width=True, hide_index=True)
 
 
