@@ -5,7 +5,7 @@ import json
 import time
 
 # 1. --- CONFIGURACIÓN Y ESTÉTICA (LOOK RUIN BAR) ---
-st.set_page_config(page_title="La Terminal App", page_icon="🍺", layout="centered")
+st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
 st.markdown("""
     <style>
@@ -57,7 +57,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🍻 BARING 🍻")
-st.markdown('<p class="signature">by Ulises</p>', unsafe_allow_html=True)
+st.markdown('<p class="signature">By Ulises</p>', unsafe_allow_html=True)
 
 # 2. --- CARTA COMPLETA ---
 URL_SCRIPT = st.secrets["api_url"]
@@ -172,6 +172,7 @@ if not data_actual.empty:
         
     except:
         st.info("Cargando historial de pedidos...")
+
 
 
 
