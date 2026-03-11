@@ -85,21 +85,33 @@ URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
     "Cervezas 🍺": {
-        "Pinta Visionaire": 5500, "Pinta Premium": 6800, "Irish Red": 7000, "Caramel": 7000, 
-        "Frutos Rojos": 7000, "Amber Lager": 7000, "Session IPA": 7500, "APA": 7500, 
-        "EPA": 7500, "Scottish": 7800, "Stout": 7800, "Barley": 7800, "Lemon Kush": 8000,
+        "Pinta Artesanal Visionaire": 5500, "Pinta Artesanal Premium": 6800,
+        "Irish Red (Visio)": 7000, "Caramel (Visio)": 7000, "Frutos Rojos (Calvu)": 7000,
+        "Amber Lager (Fermentum)": 7000, "Session IPA (Fermentum)": 7500,
+        "APA (Visio / Fermentum)": 7500, "EPA (Calvu)": 7500, "Scottish (Calvu)": 7800,
+        "Stout (Walmunz)": 7800, "Barley (Walmunz)": 7800, "Lemon Kush (Calvu)": 8000,
         "Heineken Monjita": 6500, "Heineken Balde x6": 35000, "Imperial Lata": 5500
     },
     "Tragos 🍸": {
-        "Fernet Branca": 6500, "Aperol Spritz": 7500, "Gin Tonic Malandra": 7000, 
-        "Gin Importado": 9000, "Old Fashioned": 11500, "Negroni": 8800, "Jager Bomb": 11500
+        "Fernet Branca": 6500, "Aperol Spritz": 7500, "Gin Tonic Malandra (Vaso)": 5500,
+        "Gin Tonic Malandra (Copón)": 7000, "Gin Tonic Importado": 9000,
+        "Boulevardier": 7200, "Old Fashioned": 11500, "Penicilin": 7800,
+        "Tom Collins": 7600, "Cuba Libre": 7000, "Red Label": 8000,
+        "Destornillador": 7000, "Jager Bomb / Julep": 11500, "Cynar Julep": 7000,
+        "Vermouth": 6000, "Gancia Batido/Directo": 6500, "Caipirinha / Caipiroska": 7000,
+        "Caipi Malibú": 9000, "Negroni": 8800, "Coctelería de Autor": 11500
     },
-    "Bebidas Sin Alcohol 🥤": {
-        "Gaseosa / Agua": 3800, "Limonada Vaso": 3800, "Limonada Jarra": 13000, "Red Bull": 6000
+    "Bebidas sin Alcohol 🥤": {
+        "Gaseosa chica": 3800, "Agua sin/con gas": 3800, "Agua Saborizada": 3800,
+        "Vaso de Limonada": 3800, "Jarra de Limonada": 13000, "Red Bull": 6000, "Speed": 4600
     },
     "Comida 🍕🍔🍟": {
-        "Pizza Muzzarella": 16000, "Pizza Especial": 18000, "Burger Clásica": 13500, 
-        "Burger Walt Disney": 15000, "Papas Cheddar": 9900, "Papas Stout": 10500
+        "Pizza Mozzarella": 16000, "Pizza Napolitana / Fugazza": 17000,
+        "Pizza Calabresa / 4 Quesos": 18000, "Pizza Especial / Caprese": 18000,
+        "Pizza Visio (Cheddar/Panceta)": 18900, "Pizza Stout / Rúcula y Crudo": 19900,
+        "Burger Clásica / Cheese (Doble)": 13500, "Burger Antipasti / Cuarto (Doble)": 13990,
+        "Burger Walt Disney / Stout / Rockera": 15000, "Burger Dobby Quinoa (Veggie)": 13000,
+        "Papas Clásicas": 9500, "Papas (Cheddar / Bravas / 4 Quesos)": 9900, "Papas Stout": 10500
     }
 }
 
@@ -158,6 +170,7 @@ if not data_actual.empty:
     st.subheader("📋 Últimos Pedidos")
     historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(10)
     st.table(historial)
+
 
 
 
