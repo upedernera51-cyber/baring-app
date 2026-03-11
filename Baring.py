@@ -35,10 +35,9 @@ CARTA = {
     }
 }
 
-# 2. --- CONFIGURACIÓN DE LA APP ---
 st.set_page_config(page_title="Baring App by Ulises", page_icon="🍺")
 
-# Conexión a Google Sheets
+# Intentar conexión
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 st.markdown("""
@@ -49,24 +48,19 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🍺 Baring App by Ulises")
-st.write("¡Feliz Cumple! Anotá tus consumos para que la cuenta cierre perfecta.")
 
-# Cargar datos actuales de Google Sheets
-# Reemplaza tu bloque de cargar_datos por este:
+# Función segura para leer
 def cargar_datos():
     try:
-        # Intentamos leer la hoja. ttl=0 evita que use datos viejos.
         return conn.read(worksheet="Hoja1", ttl=0)
-    except Exception as e:
-        # Si falla, creamos un DataFrame vacío con los encabezados correctos
-        st.warning("Conectando con la base de datos...")
+    except:
         return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
+
 data_actual = cargar_datos()
 
 # 3. --- FORMULARIO ---
 with st.container(border=True):
     nombre = st.text_input("Tu nombre:", placeholder="Ej: Juan").strip()
-    
     col1, col2 = st.columns(2)
     with col1:
         cat = st.selectbox("Categoría:", list(CARTA.keys()))
@@ -75,48 +69,36 @@ with st.container(border=True):
     
     precio_actual = CARTA[cat][prod]
     st.markdown(f'<div class="price-tag">Precio: ${precio_actual:,}</div>', unsafe_allow_html=True)
-    
     cant = st.number_input("Cantidad:", min_value=1, max_value=20, value=1)
     
     if st.button("Anotar a mi cuenta ➕"):
         if nombre:
-            # Crear nueva fila
             nueva_fila = pd.DataFrame([{
-                "Invitado": nombre,
-                "Producto": prod,
-                "Cant": int(cant),
-                "Subtotal": int(precio_actual * cant)
+                "Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)
             }])
             
-            # Combinar con datos viejos y subir
+            # UNIÓN DE DATOS
             df_actualizado = pd.concat([data_actual, nueva_fila], ignore_index=True)
-            conn.update(worksheet="Hoja1", data=df_actualizado)
             
-            st.success(f"✅ Guardado en la nube para {nombre}")
-            st.rerun() # Refrescar para mostrar la tabla actualizada
+            # EL CAMBIO CLAVE: Intentar actualizar con manejo de error
+            try:
+                conn.update(worksheet="Hoja1", data=df_actualizado)
+                st.success(f"✅ ¡Anotado en la cuenta de {nombre}!")
+                st.rerun()
+            except Exception as e:
+                st.error("Error de permisos en Google Sheets. Revisá que esté en modo 'Editor' para todos.")
         else:
-            st.error("⚠️ Poné tu nombre.")
+            st.error("⚠️ Por favor, poné tu nombre.")
 
 # 4. --- RESUMEN ---
 if not data_actual.empty:
     st.divider()
-    
-    # Resumen por invitado
     resumen = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
     resumen.columns = ["Invitado", "Total a Pagar ($)"]
-    
-    st.write("### 💵 Resumen para pagar")
+    st.write("### 💵 Resumen de la cuenta")
     st.table(resumen)
     
-    with st.expander("Ver detalle de pedidos (Historial Completo)"):
+    with st.expander("Ver detalle"):
         st.dataframe(data_actual, use_container_width=True, hide_index=True)
-        st.write(f"**Total acumulado en el bar: ${data_actual['Subtotal'].sum():,}**")
-
-    # Botón de limpieza (OJO: Borra el Google Sheet)
-    if st.button("❌ Limpiar todo (Solo Ulises)"):
-        # Creamos un dataframe vacío con los encabezados
-        df_vacio = pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
-        conn.update(worksheet="Hoja1", data=df_vacio)
-        st.rerun()
 
 
