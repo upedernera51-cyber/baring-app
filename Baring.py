@@ -75,14 +75,31 @@ with st.container(border=True):
     
     if st.button("Anotar a mi cuenta ➕"):
         if nombre:
-            payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-            with st.spinner("Anotando..."):
+            payload = {
+                "Invitado": nombre,
+                "Producto": prod,
+                "Cant": int(cant),
+                "Subtotal": int(precio_actual * cant)
+            }
+            with st.spinner("Anotando en la cuenta..."):
                 try:
+                    # Enviamos los datos
                     requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=10)
-                    st.toast("✅ ¡Anotado!")
+                    
+                    # El mensaje de éxito que desaparece solo
+                    st.success(f"¡Listo {nombre}, ya te lo anoté!")
+                    
+                    # Esperamos un segundo para que el usuario vea el mensaje
+                    import time
+                    time.sleep(1.5) 
+                    
+                    # Ahora sí refrescamos para actualizar la tabla de abajo
                     st.rerun()
                 except:
-                    st.rerun() # Refrescamos igual porque a veces el dato llega aunque falle la rta
+                    # Si falla, le avisamos pero igual refrescamos por las dudas
+                    st.error("Error de conexión. Chequeá si se sumó abajo.")
+                    time.sleep(2)
+                    st.rerun()
         else:
             st.error("⚠️ Por favor, poné tu nombre.")
 
