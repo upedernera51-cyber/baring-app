@@ -9,6 +9,21 @@ st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
 st.markdown("""
     <style>
+            /* Estilo para que el radio button parezca una lista de botones */
+    div[data-testid="stWidgetLabel"] p {
+        font-size: 20px !important;
+        color: #FFB300 !important;
+    }
+    .stRadio div[role="radiogroup"] {
+        gap: 10px;
+    }
+    .stRadio div[role="radiogroup"] label {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 179, 0, 0.3);
+        border-radius: 10px;
+        padding: 10px 15px;
+        width: 100%;
+    }
     .stApp {
         background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
                     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop") !important;
@@ -115,7 +130,10 @@ data_actual = cargar_datos()
 # 3. --- FORMULARIO ---
 with st.container():
     nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
-    cat = st.radio("📂 Categoría:", list(CARTA.keys()), horizontal=True)
+    
+    # Categorías una debajo de la otra para que no se amontonen
+    cat = st.radio("📂 Seleccioná Categoría:", list(CARTA.keys()))
+    
     prod = st.selectbox("🍕 Elegí el Producto:", list(CARTA[cat].keys()))
     
     precio_actual = CARTA[cat][prod]
@@ -137,7 +155,6 @@ with st.container():
                 st.rerun()
         else:
             st.warning("⚠️ Poné tu nombre para la cuenta.")
-
 # 4. --- RESUMEN Y TABLAS ---
 if not data_actual.empty:
     st.divider()
@@ -159,6 +176,7 @@ if not data_actual.empty:
         st.table(historial)
     except:
         st.table(data_actual.iloc[::-1].head(10))
+
 
 
 
