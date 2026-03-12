@@ -229,18 +229,22 @@ if not data_actual.empty:
 # --- PANEL DE ADMIN DISCRETO (Al final de todo) ---
 st.divider()
 
-# Usamos un formulario para que el botón de OK sea explícito
-with st.form("admin_panel"):
-    admin_key = st.text_input("🔑 Acceso Admin", type="password", placeholder="Clave para sortear...")
-    submit_admin = st.form_submit_button("Entrar")
+# Usamos columnas para que el botón de OK esté al lado del texto
+col_key, col_btn = st.columns([3, 1])
 
-# Si la clave es correcta (ya sea por Enter o por el botón de OK)
+with col_key:
+    admin_key = st.text_input("🔑 Acceso Admin", type="password", placeholder="Clave...", label_visibility="collapsed")
+
+# Si escribiste la clave, habilitamos el botón de sorteo
 if admin_key.lower() == "ulises":
-    st.subheader("🛠️ Panel de Control")
-    st.info("¡Clave correcta! Cuando estés listo, dale al botón de abajo para que empiece el show.")
+    st.success("✅ Modo Admin Activo")
     if st.button("🔥 ¡INICIAR SORTEO AHORA! 🔥", use_container_width=True):
         st.session_state.countdown = 10
         st.rerun()
+else:
+    if admin_key: # Si escribió algo pero no es la clave
+        st.error("Clave incorrecta")
+
 
 
 
