@@ -124,11 +124,11 @@ def cargar_datos():
 nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
 
 st.write("### 📂 1. Categoría")
-cat = st.pills("Cat", list(CARTA.keys()), label_visibility="collapsed")
+cat = st.selectbox("📂 1. Seleccioná Categoría", [None] + list(CARTA.keys()))
 
 if cat:
     st.write(f"### 🍕 2. {cat}")
-    prod = st.pills("Prod", list(CARTA[cat].keys()), label_visibility="collapsed")
+    prod = st.selectbox(f"🍕 2. Seleccioná tu {cat}", [None] + list(CARTA[cat].keys()))
     
     if prod:
         precio = CARTA[cat][prod]
