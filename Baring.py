@@ -413,7 +413,7 @@ if cat and cat in CARTA:
 
                     except:
 
-                        st.error("Sumaste una chance!.")
+                        st.error("Sumaste una chance!")
 
             else:
 
@@ -437,7 +437,7 @@ if not data_actual.empty:
 # --- CONSULTA INDIVIDUAL DE GASTO (VERSION CORREGIDA) ---
 if not data_actual.empty:
     st.divider()
-    with st.expander("🧐 Consultar cuánto lleva gastado cada uno"):
+    with st.expander("🧐 Consultar cuánto llevo gastado"):
         # Aseguramos que la columna Invitado exista
         col_invitado = "Invitado" if "Invitado" in data_actual.columns else data_actual.columns[0]
         
@@ -456,7 +456,7 @@ if not data_actual.empty:
             detalle = data_actual[data_actual[col_invitado] == seleccion][columnas_existentes]
             
             st.dataframe(detalle, hide_index=True, use_container_width=True)
-            
+
 # Panel Admin
 
 st.divider()
