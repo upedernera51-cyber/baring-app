@@ -210,12 +210,45 @@ if st.session_state.countdown == -2:
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DE PEDIDO (SELECCIÓN ESCALONADA) ---
+# 4. --- FORMULARIO DE PEDIDO (PRODUCTOS EN BOXES) ---
 nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 
 st.write("### 📂 1. Seleccioná Categoría")
 cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
 
+if cat:
+    st.write(f"### 🍕 2. Tocá un producto de {cat}")
+    
+    # Creamos los boxes (botones) para cada producto
+    productos_cat = CARTA[cat]
+    
+    # Usamos columnas o botones seguidos para crear el efecto de "boxes"
+    for prod, precio in productos_cat.items():
+        # Cada botón muestra el nombre y el precio
+        if st.button(f"{prod} - ${precio:,}", key=f"btn_{prod}"):
+            if nombre:
+                # Al tocar el box, se define la cantidad (por defecto 1) y se envía
+                payload = {
+                    "Invitado": nombre, 
+                    "Producto": prod, 
+                    "Cant": 1, 
+                    "Subtotal": int(precio)
+                }
+                
+                with st.spinner(f"Anotando {prod}..."):
+                    try:
+                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
+                        st.cache_data.clear()
+                        st.success(f"✅ ¡Anotado {prod} para {nombre}!")
+                        time.sleep(1)
+                        st.rerun()
+                    except:
+                        st.error("Error de conexión.")
+            else:
+                st.warning("⚠️ ¡Falta tu nombre arriba!")
+
+    st.info("💡 Al tocar el producto se anota automáticamente 1 unidad.")
+    
 # Solo si elige una categoría, mostramos el segundo paso
 if cat:
     st.write(f"### 🍕 2. Seleccioná {cat}")
