@@ -209,83 +209,85 @@ if st.session_state.countdown == -2:
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DE PEDIDO (ESTILO GRILLA COMPACTA) ---
-
-# CSS Extra para los botones de producto (hacerlos pequeños y grises)
+# --- CSS PARA FORZAR BOTONES PEQUEÑOS Y GRILLA ---
 st.markdown("""
     <style>
-    /* Estilo para los botones de la grilla de productos */
-    div.stColumn > div > button {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        color: white !important;
+    /* 1. Botones de Producto: Transparentes, bordes finos y pequeños */
+    div[data-testid="stColumn"] button {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        color: #CCC !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        font-size: 12px !important;
-        height: 45px !important;
-        padding: 2px !important;
-        margin-bottom: -10px !important;
+        height: 35px !important;
+        font-size: 10px !important;
+        padding: 0px !important;
+        margin-bottom: -15px !important;
+        text-transform: uppercase;
     }
-    /* Estilo para el botón de confirmar (mantenemos el naranja grande) */
-    div.stButton > button[kind="primary"] {
+
+    /* 2. Cuando el botón está seleccionado (hover o activo) */
+    div[data-testid="stColumn"] button:focus, div[data-testid="stColumn"] button:active {
+        border-color: #FFB300 !important;
+        color: #FFB300 !important;
+        background-color: rgba(255, 179, 0, 0.1) !important;
+    }
+
+    /* 3. Botón de CONFIRMAR: Grande, Naranja y visible */
+    .stButton > button[kind="primary"] {
         background-color: #FFB300 !important;
         color: black !important;
-        font-size: 20px !important;
-        height: 60px !important;
-        margin-top: 20px !important;
+        font-size: 18px !important;
+        height: 55px !important;
+        border-radius: 10px !important;
+        margin-top: 10px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
-cat = st.selectbox("📂 Seleccioná Categoría", [None] + list(CARTA.keys()))
+# --- FORMULARIO OPTIMIZADO PARA MÓVIL ---
+nombre = st.text_input("👤 Nombre:", placeholder="Tu nombre...")
+cat = st.selectbox("📂 Categoría:", [None] + list(CARTA.keys()))
 
 if cat:
-    # Usamos session_state para la selección
+    # Selección de producto en grilla de 3 para que entren bien en el ancho del celu
+    productos = list(CARTA[cat].keys())
+    
     if f"sel_{cat}" not in st.session_state:
         st.session_state[f"sel_{cat}"] = None
-    
-    # GRILLA DE PRODUCTOS (4 columnas para que sean pequeños y entren varios)
-    productos = list(CARTA[cat].keys())
-    cols = st.columns(4) 
-    
-    for i, prod in enumerate(productos):
-        # El botón de producto es sutil
-        if cols[i % 4].button(prod, key=f"btn_{prod}"):
-            st.session_state[f"sel_{cat}"] = prod
 
-    # Mostrar selección actual y botón de confirmación
+    # Creamos filas de 3 columnas para que sean botones chiquitos
+    for i in range(0, len(productos), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            if i + j < len(productos):
+                prod_name = productos[i + j]
+                if cols[j].button(prod_name, key=f"btn_{prod_name}"):
+                    st.session_state[f"sel_{cat}"] = prod_name
+
+    # Confirmación final
     prod_sel = st.session_state[f"sel_{cat}"]
-    
     if prod_sel:
         precio = CARTA[cat][prod_sel]
+        st.markdown(f"<div style='text-align:center; color:#FFB300; font-size:14px; margin-top:10px;'>🎯 <b>{prod_sel}</b> (${precio:,})</div>", unsafe_allow_html=True)
         
-        # Un mensaje compacto de qué hay seleccionado
-        st.markdown(f"<p style='text-align:center; color:#FFB300; margin-top:10px;'><b>Seleccionado:</b> {prod_sel} (${precio:,})</p>", unsafe_allow_html=True)
-        
-        col_cant, col_ok = st.columns([1, 2])
-        with col_cant:
+        c1, c2 = st.columns([1, 2])
+        with c1:
             cant = st.number_input("Cant:", 1, 10, 1)
-        with col_ok:
-            # ESTE es el botón grande y naranja
+        with c2:
             if st.button("🚀 ANOTAR PEDIDO", type="primary", use_container_width=True):
                 if nombre:
-                    with st.spinner("Enviando..."):
-                        payload = {
-                            "Invitado": nombre, 
-                            "Producto": prod_sel, 
-                            "Cant": int(cant), 
-                            "Subtotal": int(precio * cant)
-                        }
+                    with st.spinner("..."):
+                        payload = {"Invitado": nombre, "Producto": prod_sel, "Cant": int(cant), "Subtotal": int(precio * cant)}
                         try:
                             requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
                             st.cache_data.clear()
                             st.success("¡Listo!")
                             st.session_state[f"sel_{cat}"] = None
-                            time.sleep(1)
+                            time.sleep(0.5)
                             st.rerun()
                         except:
                             st.error("Error")
                 else:
-                    st.warning("⚠️ Falta nombre")
+                    st.warning("Escribí tu nombre")
 
 # 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
