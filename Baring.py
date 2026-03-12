@@ -32,41 +32,52 @@ st.markdown("""
         opacity: 0.9;
     }
 
-    /* --- GRILLA DE PRODUCTOS (Radio como Boxes) --- */
+    /* --- ARREGLO DE LOS BOXES (Sin el círculo superpuesto) --- */
     div[data-testid="stRadio"] > div {
         flex-direction: row !important;
         flex-wrap: wrap !important;
-        gap: 8px !important;
+        gap: 10px !important;
+    }
+
+    /* Ocultamos el círculo del radio por completo */
+    div[data-testid="stRadio"] label div[data-testid="stWidgetSelectionMarker"] {
+        display: none !important;
     }
 
     div[data-testid="stRadio"] label {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 8px !important;
-        padding: 8px 12px !important;
+        padding: 10px 15px !important;
         color: #CCC !important;
-        font-size: 13px !important;
+        font-size: 14px !important;
         cursor: pointer;
+        margin: 0px !important;
     }
 
+    /* Estilo cuando el box está seleccionado */
     div[data-testid="stRadio"] label[data-selected="true"] {
         border-color: #FFB300 !important;
         color: #FFB300 !important;
         background-color: rgba(255, 179, 0, 0.1) !important;
+        box-shadow: 0 0 10px rgba(255, 179, 0, 0.2);
     }
 
+    /* Quitamos el margen extraño del texto interno */
     div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
-        margin-left: -15px !important;
+        margin: 0px !important;
+        padding: 0px !important;
     }
     
     .stButton > button {
         background-color: #FFB300 !important;
         color: black !important;
         font-weight: bold !important;
-        font-size: 20px !important;
+        font-size: 22px !important;
         height: 3em !important;
         border-radius: 12px !important;
         width: 100% !important;
+        margin-top: 10px;
     }
 
     .price-tag {
@@ -86,7 +97,7 @@ st.markdown("""
 st.title("🍻 Baring App 🍻")
 st.markdown('<p class="signature">by Ulises</p>', unsafe_allow_html=True)
 
-# 2. --- DATOS Y CONEXIÓN ---
+# 2. --- DATOS Y CARTA ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
@@ -142,14 +153,46 @@ def cargar_datos():
         pass
     return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 
-# 3. --- SECCIÓN DE PEDIDO (DINÁMICA) ---
-nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
+# 3. --- LÓGICA DE SORTEO ---
+if "countdown" not in st.session_state:
+    st.session_state.countdown = -1
+
+# Pantalla de Cuenta Regresiva
+if st.session_state.countdown >= 0:
+    placeholder = st.empty()
+    for i in range(st.session_state.countdown, -1, -1):
+        with placeholder.container():
+            st.markdown(f"<h1 style='font-size: 100px; text-align:center;'>{i if i > 0 else '🔥'}</h1>", unsafe_allow_html=True)
+            time.sleep(1)
+    st.session_state.countdown = -2 
+    st.rerun()
+
+# Pantalla del Ganador
+if st.session_state.countdown == -2:
+    data_sorteo = cargar_datos()
+    if not data_sorteo.empty:
+        bolsa = data_sorteo["Invitado"].dropna().tolist()
+        if bolsa:
+            ganador = random.choice(bolsa)
+            st.markdown(f"""
+                <div style="border: 4px solid #FFB300; background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center;">
+                    <h2 style='color: white;'>🏆 ¡EL GANADOR ES! 🏆</h2>
+                    <div style="color: #FFB300; font-size: 50px; font-weight: bold;">{ganador}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.snow()
+            if st.button("Volver a la App"):
+                st.session_state.countdown = -1
+                st.rerun()
+    st.stop()
+
+# 4. --- FORMULARIO DINÁMICO ---
+nombre = st.text_input("👤 Tu nombre:", placeholder="¿Cómo te llamas?")
 cat = st.selectbox("📂 Seleccioná Categoría", [None] + list(CARTA.keys()))
 
-prod = None
 if cat and cat in CARTA:
-    st.write(f"### 🍕 Seleccioná tu {cat}")
-    # El radio ahora es instantáneo porque NO está en un formulario
+    st.write(f"### 🍕 ¿Qué vas a pedir de {cat}?")
+    # Radio horizontal (Boxes)
     prod = st.radio("Productos", list(CARTA[cat].keys()), horizontal=True, label_visibility="collapsed")
     
     if prod:
@@ -157,7 +200,6 @@ if cat and cat in CARTA:
         st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
         cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
         
-        # Botón de acción
         if st.button("🚀 ¡ANOTAR PEDIDO!"):
             if nombre:
                 payload = {
@@ -166,37 +208,31 @@ if cat and cat in CARTA:
                     "Cant": int(cant),
                     "Subtotal": int(precio_actual * cant)
                 }
-                with st.spinner("Enviando a la barra..."):
+                with st.spinner("Enviando..."):
                     try:
                         requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
                         st.cache_data.clear()
-                        st.success(f"✅ ¡Anotado para {nombre}!")
-                        time.sleep(1.5)
+                        st.success(f"✅ ¡Listo, {nombre}!")
+                        time.sleep(1)
                         st.rerun()
                     except:
                         st.error("Error de conexión.")
             else:
-                st.warning("⚠️ Por favor, poné tu nombre antes de anotar.")
+                st.warning("⚠️ Escribí tu nombre primero.")
 
-# 4. --- DASHBOARD ---
+# 5. --- DASHBOARD ---
 data_actual = cargar_datos()
-
 if not data_actual.empty:
     st.divider()
     if "Invitado" in data_actual.columns:
         st.subheader("🏆 Ranking de Tickets")
         ranking = data_actual.groupby("Invitado").size().reset_index(name='Tickets 🎫')
-        ranking = ranking.sort_values(by='Tickets 🎫', ascending=False)
-        st.dataframe(ranking, hide_index=True, use_container_width=True)
-
-    if all(col in data_actual.columns for col in ["Invitado", "Producto", "Cant"]):
-        st.subheader("📋 Últimos Pedidos")
-        st.table(data_actual[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5))
+        st.dataframe(ranking.sort_values(by='Tickets 🎫', ascending=False), hide_index=True, use_container_width=True)
 
 # Panel Admin
 st.divider()
 admin_key = st.text_input("🔑 Admin", type="password", placeholder="Clave...", label_visibility="collapsed")
 if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥"):
-        # Lógica de sorteo...
-        pass
+        st.session_state.countdown = 5
+        st.rerun()
