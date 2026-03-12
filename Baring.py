@@ -153,6 +153,7 @@ if cat:
                         st.error("Sumaste una chance!")
 
 # 4. --- RESUMEN, RANKING Y MOVIMIENTOS ---
+data_actual = cargar_datos()
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
