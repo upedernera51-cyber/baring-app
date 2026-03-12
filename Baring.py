@@ -21,6 +21,25 @@ st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 st.markdown("""
 
     <style>
+            /* Forzar color blanco en etiquetas, títulos y widgets */
+    label, p, .stMarkdown, .stSelectbox label, .stTextInput label, h3, h2 {
+        color: white !important;
+    }
+
+    /* Estilo específico para el Expander (Consultar gastos) */
+    .st-emotion-cache-p4m08p, .st-emotion-cache-1f389q9 {
+        color: white !important;
+    }
+    
+    /* Para los títulos de los expanders y textos secundarios */
+    div[data-testid="stExpander"] p {
+        color: white !important;
+    }
+
+    /* Asegurar que el texto dentro de los inputs sea legible */
+    .stTextInput input, .stSelectbox div {
+        color: black !important; /* El texto que escribís mejor dejarlo oscuro para que contraste con el fondo blanco del input */
+    }
 
     @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
