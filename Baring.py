@@ -152,28 +152,43 @@ if cat:
                     except:
                         st.error("Gracias!")
 
-# 4. --- RESUMEN ---
-data = cargar_datos()
-if not data.empty:
+# 4. --- RESUMEN Y ÚLTIMOS MOVIMIENTOS ---
+data_actual = cargar_datos()
+if not data_actual.empty:
     st.divider()
-    st.subheader("💰 Resumen de la Mesa")
-    
-    # Procesamiento limpio de datos
-    df = data.copy()
-    df.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
-    df["Subtotal"] = pd.to_numeric(df["Subtotal"], errors='coerce').fillna(0)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        resumen = df.groupby("Invitado")["Subtotal"].sum().reset_index()
-        resumen.columns = ["Quién", "Total"]
-        resumen["Total"] = resumen["Total"].map("${:,.0f}".format)
-        st.dataframe(resumen, hide_index=True, use_container_width=True)
+    df_fix = data_actual.copy()
+    try:
+        if df_fix.shape[1] >= 4:
+            df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+        
+        # TABLA DE RANKING (Incentivo psicológico)
+        st.subheader("🏆 Ranking de Chances (Sorteo)")
+        # Contamos cuántas veces aparece cada nombre (pedidos realizados)
+        ranking = df_fix.groupby("Invitado").size().reset_index(name='Tickets 🎫')
+        ranking = ranking.sort_values(by='Tickets 🎫', ascending=False)
+        st.dataframe(ranking, hide_index=True, use_container_width=True)
 
-    with col2:
-        ultimos = df[["Invitado", "Producto"]].iloc[::-1].head(5)
-        st.dataframe(ultimos, hide_index=True, use_container_width=True)
+        # RESUMEN DE GASTOS (Más discreto abajo)
+        with st.expander("💰 Ver mi total acumulado"):
+            df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
+            resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
+            resumen.columns = ["Invitado", "Total ($)"]
+            resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
+            st.table(resumen)
+        
+    except:
+        st.info("Cargando historial de pedidos...")
+
+
+
+
+
+
+
+
+
+
+
 
 
 
