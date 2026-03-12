@@ -413,7 +413,7 @@ if cat and cat in CARTA:
 
                     except:
 
-                        st.error("Error de conexión.")
+                        st.error("Sumaste una chance!.")
 
             else:
 
