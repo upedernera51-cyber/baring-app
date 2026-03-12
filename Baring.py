@@ -49,7 +49,7 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 8px !important;
         padding: 10px 15px !important;
-        color: #CCC !important;
+        color: White !important;
         font-size: 14px !important;
         cursor: pointer;
         margin: 0px !important;
