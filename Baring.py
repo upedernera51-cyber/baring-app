@@ -150,7 +150,7 @@ if cat:
                         time.sleep(1.5)
                         st.rerun()
                     except:
-                        st.error("Gracias!")
+                        st.error("Sumaste una chance!")
 
 # 4. --- RESUMEN Y ÚLTIMOS MOVIMIENTOS ---
 data_actual = cargar_datos()
@@ -178,6 +178,7 @@ if not data_actual.empty:
         
     except:
         st.info("Cargando historial de pedidos...")
+
 
 
 
