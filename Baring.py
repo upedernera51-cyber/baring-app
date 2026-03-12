@@ -201,7 +201,6 @@ if st.session_state.countdown == -2:
                 <div style="border: 4px solid #FFB300; background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center;">
                     <h2 style='color: white;'>🏆 ¡EL GANADOR ES! 🏆</h2>
                     <div style="color: #FFB300; font-size: 50px; font-weight: bold;">{ganador}</div>
-                    <p style='color: white; font-size: 20px;'>¡Vení a la barra por tu premio!</p>
                 </div>
             """, unsafe_allow_html=True)
             st.snow()
@@ -210,39 +209,63 @@ if st.session_state.countdown == -2:
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DE PEDIDO (PRODUCTOS EN BOXES ÚNICOS) ---
+# 4. --- FORMULARIO DE PEDIDO OPTIMIZADO ---
 nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 
 st.write("### 📂 1. Seleccioná Categoría")
 cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
 
 if cat:
-    st.write(f"### 🍕 2. Tocá para pedir (Cantidad: 1)")
+    st.write(f"### 🍕 2. Seleccioná Producto")
     
-    # Generamos los boxes de productos
-    for prod, precio in CARTA[cat].items():
-        # Al tocar el botón, se ejecuta todo lo de adentro
-        if st.button(f"{prod} — ${precio:,}", key=f"btn_{prod}", use_container_width=True):
-            if nombre:
-                # El 'payload' se crea y envía instantáneamente
-                payload = {
-                    "Invitado": nombre, 
-                    "Producto": prod, 
-                    "Cant": 1, 
-                    "Subtotal": int(precio)
-                }
-                
-                with st.spinner(f"Anotando {prod}..."):
-                    try:
-                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
-                        st.cache_data.clear() # Limpiamos caché para actualizar ranking
-                        st.success(f"✅ ¡Anotado {prod} para {nombre}!")
-                        time.sleep(1)
-                        st.rerun() # Refresca la app para mostrar el ranking nuevo
-                    except:
-                        st.error("Error de conexión. Reintentá.")
+    # PUNTO 1: Botones más pequeños y elegantes (2 por fila)
+    productos = list(CARTA[cat].keys())
+    cols = st.columns(2) # Esto los hace más pequeños y ordenados
+    
+    # Usamos session_state para guardar la selección sin recargar la página
+    if f"sel_{cat}" not in st.session_state:
+        st.session_state[f"sel_{cat}"] = None
+
+    for i, prod in enumerate(productos):
+        # Botones transparentes con borde (estilo box)
+        if cols[i % 2].button(prod, key=f"btn_{prod}", use_container_width=True):
+            st.session_state[f"sel_{cat}"] = prod
+
+    # Si hay un producto seleccionado, mostramos la confirmación
+    prod_sel = st.session_state[f"sel_{cat}"]
+    
+    if prod_sel:
+        precio = CARTA[cat][prod_sel]
+        st.markdown(f'<div class="price-tag">Seleccionado: {prod_sel}<br>${precio:,}</div>', unsafe_allow_html=True)
+        
+        cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
+
+        # PUNTO 2 y 3: Botón de confirmación con protección contra doble click
+        # Usamos use_container_width y un estado de carga
+        if st.button("🚀 CONFIRMAR PEDIDO", type="primary", use_container_width=True):
+            if not nombre:
+                st.warning("⚠️ Poné tu nombre arriba.")
             else:
-                st.warning("⚠️ ¡Escribí tu nombre arriba antes de pedir!")
+                # PUNTO 3: Protección inmediata (spinner bloquea la UI)
+                with st.spinner("Anotando..."):
+                    payload = {
+                        "Invitado": nombre, 
+                        "Producto": prod_sel, 
+                        "Cant": int(cant), 
+                        "Subtotal": int(precio * cant)
+                    }
+                    try:
+                        # PUNTO 4: Envío rápido
+                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
+                        st.cache_data.clear()
+                        st.success("✅ ¡Pedido realizado!")
+                        # Limpiamos selección para el próximo
+                        st.session_state[f"sel_{cat}"] = None
+                        time.sleep(1)
+                        st.rerun()
+                    except:
+                        st.error("Error de conexión.")
+
 # 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
     st.divider()
@@ -275,4 +298,3 @@ if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
         st.session_state.countdown = 5
         st.rerun()
-
