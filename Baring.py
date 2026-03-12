@@ -350,35 +350,6 @@ if st.session_state.countdown == -2:
 
 
 
-# 4. --- CONSULTA DISCRETA DE GASTO ---
-
-data_actual = cargar_datos()
-
-
-
-with st.expander("🧐 Consultar cuánto llevo gastado"):
-
-    consulta_nombre = st.text_input("Ingresá tu nombre para ver tu cuenta:", key="consulta")
-
-    if consulta_nombre and not data_actual.empty:
-
-        # Filtramos ignorando mayúsculas/minúsculas
-
-        mis_pedidos = data_actual[data_actual["Invitado"].str.contains(consulta_nombre, case=False, na=False)]
-
-        total = mis_pedidos["Subtotal"].sum()
-
-        if total > 0:
-
-            st.write(f"### 💰 Total acumulado: ${total:,}")
-
-            st.dataframe(mis_pedidos[["Producto", "Cant", "Subtotal"]], hide_index=True)
-
-        else:
-
-            st.info("No encontramos pedidos a ese nombre todavía.")
-
-
 
 st.divider()
 
@@ -448,8 +419,7 @@ if cat and cat in CARTA:
 
                 st.warning("⚠️ Escribí tu nombre primero.")
 
-
-
+data_actual = cargar_datos()
 # 6. --- DASHBOARD PÚBLICO ---
 
 if not data_actual.empty:
