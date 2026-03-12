@@ -434,25 +434,29 @@ if not data_actual.empty:
 
         st.dataframe(ranking.sort_values(by='Tickets 🎫', ascending=False), hide_index=True, use_container_width=True)
 
-# --- CONSULTA INDIVIDUAL DE GASTO ---
+# --- CONSULTA INDIVIDUAL DE GASTO (VERSION CORREGIDA) ---
 if not data_actual.empty:
     st.divider()
     with st.expander("🧐 Consultar cuánto lleva gastado cada uno"):
-        # Calculamos los totales por persona
-        gastos_totales = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
+        # Aseguramos que la columna Invitado exista
+        col_invitado = "Invitado" if "Invitado" in data_actual.columns else data_actual.columns[0]
         
-        # Lista para el desplegable
-        opciones = ["Seleccioná un nombre..."] + gastos_totales["Invitado"].unique().tolist()
+        # Calculamos los totales
+        gastos_totales = data_actual.groupby(col_invitado)["Subtotal"].sum().reset_index()
+        
+        opciones = ["Seleccioná un nombre..."] + gastos_totales[col_invitado].unique().tolist()
         seleccion = st.selectbox("Ver cuenta de:", opciones, label_visibility="collapsed")
         
         if seleccion != "Seleccioná un nombre...":
-            total_persona = gastos_totales[gastos_totales["Invitado"] == seleccion]["Subtotal"].iloc[0]
+            total_persona = gastos_totales[gastos_totales[col_invitado] == seleccion]["Subtotal"].iloc[0]
             st.markdown(f"💰 **{seleccion}** lleva gastado un total de: **${total_persona:,}**")
             
-            # Detalle opcional de qué pidió
-            detalle = data_actual[data_actual["Invitado"] == seleccion][["Producto", "Cant", "Subtotal"]]
+            # FILTRADO SEGURO: Solo mostramos las columnas que REALMENTE existen en tu dataframe
+            columnas_existentes = [c for c in ["Producto", "Cant", "Subtotal"] if c in data_actual.columns]
+            detalle = data_actual[data_actual[col_invitado] == seleccion][columnas_existentes]
+            
             st.dataframe(detalle, hide_index=True, use_container_width=True)
-
+            
 # Panel Admin
 
 st.divider()
