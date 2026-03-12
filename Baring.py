@@ -281,23 +281,23 @@ with st.form("form_pedido", clear_on_submit=True):
 
 
 
-st.write("### 📂 1. Seleccioná Categoría")
+ st.write("### 📂 1. Seleccioná Categoría")
 
 # Usamos el selectbox que querías
 
-cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
+ cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
 
 
 
-if cat:
+ if cat:
 
     st.write(f"### 🍕 2. Seleccioná {cat}")
 
 # Cambiá tu línea por esta:
-prod = st.radio("Productos", list(CARTA[cat].keys()), label_visibility="collapsed", horizontal=True)
+ prod = st.radio("Productos", list(CARTA[cat].keys()), label_visibility="collapsed", horizontal=True)
    
 
-if prod:
+ if prod:
 
         precio_actual = CARTA[cat][prod]
 
