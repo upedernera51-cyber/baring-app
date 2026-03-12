@@ -16,6 +16,34 @@ st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 st.markdown("""
 
     <style>
+            /* Convierte las opciones del radio en boxes horizontales */
+div[data-testid="stRadio"] > div {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+/* Estilo del box (el label del radio) */
+div[data-testid="stRadio"] label {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    color: #CCC !important;
+    font-size: 12px !important;
+}
+
+/* Estilo cuando está seleccionado */
+div[data-testid="stRadio"] label[data-selected="true"] {
+    border-color: #FFB300 !important;
+    color: #FFB300 !important;
+    background-color: rgba(255, 179, 0, 0.1) !important;
+}
+
+/* Oculta el círculo original del radio */
+div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
+    margin-left: -20px !important; /* Mueve el texto sobre el círculo */
+}
 
     @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
@@ -247,7 +275,9 @@ st.markdown("""
 
 # Definimos 'nombre' para que no de error
 
-nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
+with st.form("form_pedido", clear_on_submit=True):
+
+ nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 
 
 
@@ -263,11 +293,11 @@ if cat:
 
     st.write(f"### 🍕 2. Seleccioná {cat}")
 
-    prod = st.radio("Productos", [None] + list(CARTA[cat].keys()), label_visibility="collapsed")
-
+# Cambiá tu línea por esta:
+prod = st.radio("Productos", list(CARTA[cat].keys()), label_visibility="collapsed", horizontal=True)
    
 
-    if prod:
+if prod:
 
         precio_actual = CARTA[cat][prod]
 
@@ -279,7 +309,7 @@ if cat:
 
        
 
-        if st.button("🚀 ¡ANOTAR PEDIDO!", use_container_width=True):
+        if st.form_submit_button("🚀 ¡ANOTAR PEDIDO!"):
 
             if nombre:
 
@@ -361,4 +391,3 @@ if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
         st.session_state.countdown = 5
         st.rerun()
-
