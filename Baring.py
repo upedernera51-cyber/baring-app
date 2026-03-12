@@ -287,7 +287,9 @@ with st.form("form_pedido", clear_on_submit=True):
 
  cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
 
-
+ if cat and cat in CARTA:
+    # Aquí recién va el st.radio y el cálculo del precio
+    prod = st.radio("Productos", list(CARTA[cat].keys()), horizontal=True, label_visibility="collapsed")
 
  if cat:
 
