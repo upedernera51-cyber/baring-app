@@ -150,7 +150,7 @@ if cat:
                         time.sleep(1.5)
                         st.rerun()
                     except:
-                        st.error("Hubo un pequeño error de red, pero reintentá.")
+                        st.error("Gracias!")
 
 # 4. --- RESUMEN ---
 data = cargar_datos()
@@ -174,6 +174,7 @@ if not data.empty:
     with col2:
         ultimos = df[["Invitado", "Producto"]].iloc[::-1].head(5)
         st.dataframe(ultimos, hide_index=True, use_container_width=True)
+
 
 
 
