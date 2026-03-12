@@ -243,51 +243,91 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- FORMULARIO OPTIMIZADO PARA MÓVIL ---
-nombre = st.text_input("👤 Nombre:", placeholder="Tu nombre...")
-cat = st.selectbox("📂 Categoría:", [None] + list(CARTA.keys()))
+# 4. --- FORMULARIO DE PEDIDO ---
+
+# Definimos 'nombre' para que no de error
+
+nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
+
+
+
+st.write("### 📂 1. Seleccioná Categoría")
+
+# Usamos el selectbox que querías
+
+cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
+
+
 
 if cat:
-    # Selección de producto en grilla de 3 para que entren bien en el ancho del celu
-    productos = list(CARTA[cat].keys())
-    
-    if f"sel_{cat}" not in st.session_state:
-        st.session_state[f"sel_{cat}"] = None
 
-    # Creamos filas de 3 columnas para que sean botones chiquitos
-    for i in range(0, len(productos), 3):
-        cols = st.columns(3)
-        for j in range(3):
-            if i + j < len(productos):
-                prod_name = productos[i + j]
-                if cols[j].button(prod_name, key=f"btn_{prod_name}"):
-                    st.session_state[f"sel_{cat}"] = prod_name
+    st.write(f"### 🍕 2. Seleccioná {cat}")
 
-    # Confirmación final
-    prod_sel = st.session_state[f"sel_{cat}"]
-    if prod_sel:
-        precio = CARTA[cat][prod_sel]
-        st.markdown(f"<div style='text-align:center; color:#FFB300; font-size:14px; margin-top:10px;'>🎯 <b>{prod_sel}</b> (${precio:,})</div>", unsafe_allow_html=True)
-        
-        c1, c2 = st.columns([1, 2])
-        with c1:
-            cant = st.number_input("Cant:", 1, 10, 1)
-        with c2:
-            if st.button("🚀 ANOTAR PEDIDO", type="primary", use_container_width=True):
-                if nombre:
-                    with st.spinner("..."):
-                        payload = {"Invitado": nombre, "Producto": prod_sel, "Cant": int(cant), "Subtotal": int(precio * cant)}
-                        try:
-                            requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                            st.cache_data.clear()
-                            st.success("¡Listo!")
-                            st.session_state[f"sel_{cat}"] = None
-                            time.sleep(0.5)
-                            st.rerun()
-                        except:
-                            st.error("Error")
-                else:
-                    st.warning("Escribí tu nombre")
+    prod = st.selectbox("Productos", [None] + list(CARTA[cat].keys()), label_visibility="collapsed")
+
+   
+
+    if prod:
+
+        precio_actual = CARTA[cat][prod]
+
+        st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
+
+       
+
+        cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
+
+       
+
+        if st.button("🚀 ¡ANOTAR PEDIDO!", use_container_width=True):
+
+            if nombre:
+
+                # Aquí definimos el 'payload' (el paquete de datos)
+
+                payload = {
+
+                    "Invitado": nombre,
+
+                    "Producto": prod,
+
+                    "Cant": int(cant),
+
+                    "Subtotal": int(precio_actual * cant)
+
+                }
+
+               
+
+                with st.spinner("Enviando a la barra..."):
+
+                    try:
+
+                        # OJO: Es 'requests' (con S al final)
+
+                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
+
+                       
+
+                        # Limpiamos el caché para que el Ranking se actualice al toque
+
+                        st.cache_data.clear()
+
+                       
+
+                        st.success(f"✅ ¡Anotado para {nombre}!")
+
+                        time.sleep(1)
+
+                        st.rerun()
+
+                    except:
+
+                        st.error("Error de conexión. Reintentá en un momento.")
+
+            else:
+
+                st.warning("⚠️ Por favor, poné tu nombre arriba antes de pedir.")
 
 # 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
