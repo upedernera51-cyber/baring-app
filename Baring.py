@@ -32,14 +32,13 @@ st.markdown("""
         opacity: 0.9;
     }
 
-    /* --- ARREGLO DE LOS BOXES (Sin el círculo superpuesto) --- */
+    /* --- GRILLA DE PRODUCTOS --- */
     div[data-testid="stRadio"] > div {
         flex-direction: row !important;
         flex-wrap: wrap !important;
         gap: 10px !important;
     }
 
-    /* Ocultamos el círculo del radio por completo */
     div[data-testid="stRadio"] label div[data-testid="stWidgetSelectionMarker"] {
         display: none !important;
     }
@@ -49,24 +48,19 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 8px !important;
         padding: 10px 15px !important;
-        color: White !important;
+        color: white !important; /* LETRAS BLANCAS */
         font-size: 14px !important;
         cursor: pointer;
-        margin: 0px !important;
     }
 
-    /* Estilo cuando el box está seleccionado */
     div[data-testid="stRadio"] label[data-selected="true"] {
         border-color: #FFB300 !important;
-        color: #FFB300 !important;
-        background-color: rgba(255, 179, 0, 0.1) !important;
-        box-shadow: 0 0 10px rgba(255, 179, 0, 0.2);
+        background-color: rgba(255, 179, 0, 0.2) !important;
     }
 
-    /* Quitamos el margen extraño del texto interno */
     div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
         margin: 0px !important;
-        padding: 0px !important;
+        color: white !important;
     }
     
     .stButton > button {
@@ -77,7 +71,6 @@ st.markdown("""
         height: 3em !important;
         border-radius: 12px !important;
         width: 100% !important;
-        margin-top: 10px;
     }
 
     .price-tag {
@@ -97,7 +90,7 @@ st.markdown("""
 st.title("🍻 Baring App 🍻")
 st.markdown('<p class="signature">by Ulises</p>', unsafe_allow_html=True)
 
-# 2. --- DATOS Y CARTA ---
+# 2. --- DATOS Y CONEXIÓN ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
@@ -148,6 +141,8 @@ def cargar_datos():
         if len(json_data) > 1:
             df = pd.DataFrame(json_data[1:], columns=json_data[0])
             df.columns = [c.strip().capitalize() for c in df.columns]
+            # Convertimos Subtotal a numérico por si las dudas
+            df["Subtotal"] = pd.to_numeric(df["Subtotal"], errors='coerce').fillna(0)
             return df
     except:
         pass
@@ -157,7 +152,6 @@ def cargar_datos():
 if "countdown" not in st.session_state:
     st.session_state.countdown = -1
 
-# Pantalla de Cuenta Regresiva
 if st.session_state.countdown >= 0:
     placeholder = st.empty()
     for i in range(st.session_state.countdown, -1, -1):
@@ -167,32 +161,42 @@ if st.session_state.countdown >= 0:
     st.session_state.countdown = -2 
     st.rerun()
 
-# Pantalla del Ganador
 if st.session_state.countdown == -2:
     data_sorteo = cargar_datos()
     if not data_sorteo.empty:
         bolsa = data_sorteo["Invitado"].dropna().tolist()
         if bolsa:
             ganador = random.choice(bolsa)
-            st.markdown(f"""
-                <div style="border: 4px solid #FFB300; background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center;">
-                    <h2 style='color: white;'>🏆 ¡EL GANADOR ES! 🏆</h2>
-                    <div style="color: #FFB300; font-size: 50px; font-weight: bold;">{ganador}</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div style="border:4px solid #FFB300; background:rgba(0,0,0,0.9); padding:30px; border-radius:20px; text-align:center;"><h2 style="color:white;">🏆 ¡EL GANADOR ES! 🏆</h2><div style="color:#FFB300; font-size:50px; font-weight:bold;">{ganador}</div></div>', unsafe_allow_html=True)
             st.snow()
             if st.button("Volver a la App"):
                 st.session_state.countdown = -1
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DINÁMICO ---
-nombre = st.text_input("👤 Tu nombre:", placeholder="¿Cómo te llamas?")
+# 4. --- CONSULTA DISCRETA DE GASTO ---
+data_actual = cargar_datos()
+
+with st.expander("🧐 Consultar cuánto llevo gastado"):
+    consulta_nombre = st.text_input("Ingresá tu nombre para ver tu cuenta:", key="consulta")
+    if consulta_nombre and not data_actual.empty:
+        # Filtramos ignorando mayúsculas/minúsculas
+        mis_pedidos = data_actual[data_actual["Invitado"].str.contains(consulta_nombre, case=False, na=False)]
+        total = mis_pedidos["Subtotal"].sum()
+        if total > 0:
+            st.write(f"### 💰 Total acumulado: ${total:,}")
+            st.dataframe(mis_pedidos[["Producto", "Cant", "Subtotal"]], hide_index=True)
+        else:
+            st.info("No encontramos pedidos a ese nombre todavía.")
+
+st.divider()
+
+# 5. --- FORMULARIO DE PEDIDO ---
+nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 cat = st.selectbox("📂 Seleccioná Categoría", [None] + list(CARTA.keys()))
 
 if cat and cat in CARTA:
     st.write(f"### 🍕 ¿Qué vas a pedir de {cat}?")
-    # Radio horizontal (Boxes)
     prod = st.radio("Productos", list(CARTA[cat].keys()), horizontal=True, label_visibility="collapsed")
     
     if prod:
@@ -212,16 +216,15 @@ if cat and cat in CARTA:
                     try:
                         requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
                         st.cache_data.clear()
-                        st.success(f"✅ ¡Listo, {nombre}!")
+                        st.success(f"✅ ¡Anotado para {nombre}!")
                         time.sleep(1)
                         st.rerun()
                     except:
-                        st.error("Sumaste una chance!")
+                        st.error("Error de conexión.")
             else:
                 st.warning("⚠️ Escribí tu nombre primero.")
 
-# 5. --- DASHBOARD ---
-data_actual = cargar_datos()
+# 6. --- DASHBOARD PÚBLICO ---
 if not data_actual.empty:
     st.divider()
     if "Invitado" in data_actual.columns:
