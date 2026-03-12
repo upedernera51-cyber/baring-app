@@ -111,15 +111,22 @@ CARTA = {
     }
 }
 
-@st.cache_data(ttl=30) # Reducido a 30s para que la lista sea más dinámica
+@st.cache_data(ttl=10)
 def cargar_datos():
     try:
         r = requests.get(URL_SCRIPT, timeout=5)
         json_data = r.json()
         if len(json_data) > 1:
-            return pd.DataFrame(json_data[1:], columns=json_data[0])
+            df = pd.DataFrame(json_data[1:], columns=json_data[0])
+            # Forzamos los nombres de las columnas aquí para que todo el código los reconozca
+            if df.shape[1] >= 4:
+                df.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+            return df
     except: pass
     return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
+
+# Cargamos los datos ya normalizados
+data_actual = cargar_datos()
 
 data_actual = cargar_datos()
   # --- LÓGICA DE SORTEO (ESTADO ANIMACIÓN) ---
@@ -244,7 +251,6 @@ if admin_key.lower() == "ulises":
 else:
     if admin_key: # Si escribió algo pero no es la clave
         st.error("Clave incorrecta")
-
 
 
 
