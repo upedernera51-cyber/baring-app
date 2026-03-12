@@ -434,7 +434,24 @@ if not data_actual.empty:
 
         st.dataframe(ranking.sort_values(by='Tickets 🎫', ascending=False), hide_index=True, use_container_width=True)
 
-
+# --- CONSULTA INDIVIDUAL DE GASTO ---
+if not data_actual.empty:
+    st.divider()
+    with st.expander("🧐 Consultar cuánto lleva gastado cada uno"):
+        # Calculamos los totales por persona
+        gastos_totales = data_actual.groupby("Invitado")["Subtotal"].sum().reset_index()
+        
+        # Lista para el desplegable
+        opciones = ["Seleccioná un nombre..."] + gastos_totales["Invitado"].unique().tolist()
+        seleccion = st.selectbox("Ver cuenta de:", opciones, label_visibility="collapsed")
+        
+        if seleccion != "Seleccioná un nombre...":
+            total_persona = gastos_totales[gastos_totales["Invitado"] == seleccion]["Subtotal"].iloc[0]
+            st.markdown(f"💰 **{seleccion}** lleva gastado un total de: **${total_persona:,}**")
+            
+            # Detalle opcional de qué pidió
+            detalle = data_actual[data_actual["Invitado"] == seleccion][["Producto", "Cant", "Subtotal"]]
+            st.dataframe(detalle, hide_index=True, use_container_width=True)
 
 # Panel Admin
 
