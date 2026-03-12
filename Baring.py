@@ -1,5 +1,4 @@
 import streamlit as st
-import pd
 import pandas as pd
 import requests
 import json
@@ -200,3 +199,4 @@ if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
         st.session_state.countdown = 5
         st.rerun()
+
