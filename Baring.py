@@ -128,7 +128,7 @@ cat = st.selectbox("📂 1. Seleccioná Categoría", [None] + list(CARTA.keys())
 
 if cat:
     st.write(f"### 🍕 2. {cat}")
-    prod = st.selectbox(f"🍕 2. Seleccioná tu {cat}", [None] + list(CARTA[cat].keys()))
+    prod = st.pills("Prod", list(CARTA[cat].keys()), label_visibility="collapsed")
     
     if prod:
         precio = CARTA[cat][prod]
@@ -174,6 +174,7 @@ if not data.empty:
     with col2:
         ultimos = df[["Invitado", "Producto"]].iloc[::-1].head(5)
         st.dataframe(ultimos, hide_index=True, use_container_width=True)
+
 
 
 
