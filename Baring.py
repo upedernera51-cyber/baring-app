@@ -153,31 +153,45 @@ if st.session_state.countdown == -2:
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DE PEDIDO ---
+# 4. --- FORMULARIO DE PEDIDO (SELECCIÓN ESCALONADA) ---
 nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
-cat = st.selectbox("📂 1. Seleccioná Categoría", [None] + list(CARTA.keys()))
 
+st.write("### 📂 1. Seleccioná Categoría")
+cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
+
+# Solo si elige una categoría, mostramos el segundo paso
 if cat:
-    prod = st.selectbox(f"🍕 2. Seleccioná {cat}", [None] + list(CARTA[cat].keys()))
+    st.write(f"### 🍕 2. Seleccioná {cat}")
+    prod = st.selectbox("Productos", [None] + list(CARTA[cat].keys()), label_visibility="collapsed")
+    
+    # Solo si elige un producto, mostramos precio, cantidad y botón
     if prod:
         precio_actual = CARTA[cat][prod]
         st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
+        
         cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
         
         if st.button("🚀 ¡ANOTAR PEDIDO!", use_container_width=True):
             if nombre:
-                payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-                with st.spinner("Enviando..."):
+                # Definimos el paquete de datos (payload)
+                payload = {
+                    "Invitado": nombre, 
+                    "Producto": prod, 
+                    "Cant": int(cant), 
+                    "Subtotal": int(precio_actual * cant)
+                }
+                
+                with st.spinner("Enviando a la barra..."):
                     try:
                         requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
-                        st.cache_data.clear()
+                        st.cache_data.clear() # Limpia ranking
                         st.success(f"✅ ¡Anotado para {nombre}!")
                         time.sleep(1)
                         st.rerun()
                     except:
-                        st.error("Error de conexión.")
+                        st.error("Sumaste una chance!")
             else:
-                st.warning("⚠️ Poné tu nombre arriba.")
+                st.warning("⚠️ Por favor, poné tu nombre arriba antes de pedir.")
 
 # 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
@@ -209,5 +223,5 @@ with col_k:
 
 if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
-        st.session_state.countdown = 10
+        st.session_state.countdown = 5
         st.rerun()
