@@ -210,24 +210,21 @@ if st.session_state.countdown == -2:
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DE PEDIDO (PRODUCTOS EN BOXES) ---
+# 4. --- FORMULARIO DE PEDIDO (PRODUCTOS EN BOXES ÚNICOS) ---
 nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 
 st.write("### 📂 1. Seleccioná Categoría")
 cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
 
 if cat:
-    st.write(f"### 🍕 2. Tocá un producto de {cat}")
+    st.write(f"### 🍕 2. Tocá para pedir (Cantidad: 1)")
     
-    # Creamos los boxes (botones) para cada producto
-    productos_cat = CARTA[cat]
-    
-    # Usamos columnas o botones seguidos para crear el efecto de "boxes"
-    for prod, precio in productos_cat.items():
-        # Cada botón muestra el nombre y el precio
-        if st.button(f"{prod} - ${precio:,}", key=f"btn_{prod}"):
+    # Generamos los boxes de productos
+    for prod, precio in CARTA[cat].items():
+        # Al tocar el botón, se ejecuta todo lo de adentro
+        if st.button(f"{prod} — ${precio:,}", key=f"btn_{prod}", use_container_width=True):
             if nombre:
-                # Al tocar el box, se define la cantidad (por defecto 1) y se envía
+                # El 'payload' se crea y envía instantáneamente
                 payload = {
                     "Invitado": nombre, 
                     "Producto": prod, 
@@ -238,51 +235,14 @@ if cat:
                 with st.spinner(f"Anotando {prod}..."):
                     try:
                         requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
-                        st.cache_data.clear()
+                        st.cache_data.clear() # Limpiamos caché para actualizar ranking
                         st.success(f"✅ ¡Anotado {prod} para {nombre}!")
                         time.sleep(1)
-                        st.rerun()
+                        st.rerun() # Refresca la app para mostrar el ranking nuevo
                     except:
-                        st.error("Error de conexión.")
+                        st.error("Error de conexión. Reintentá.")
             else:
-                st.warning("⚠️ ¡Falta tu nombre arriba!")
-
-    st.info("💡 Al tocar el producto se anota automáticamente 1 unidad.")
-    
-# Solo si elige una categoría, mostramos el segundo paso
-if cat:
-    st.write(f"### 🍕 2. Seleccioná {cat}")
-    prod = st.selectbox("Productos", [None] + list(CARTA[cat].keys()), label_visibility="collapsed")
-    
-    # Solo si elige un producto, mostramos precio, cantidad y botón
-    if prod:
-        precio_actual = CARTA[cat][prod]
-        st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
-        
-        cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
-        
-        if st.button("🚀 ¡ANOTAR PEDIDO!", use_container_width=True):
-            if nombre:
-                # Definimos el paquete de datos (payload)
-                payload = {
-                    "Invitado": nombre, 
-                    "Producto": prod, 
-                    "Cant": int(cant), 
-                    "Subtotal": int(precio_actual * cant)
-                }
-                
-                with st.spinner("Enviando a la barra..."):
-                    try:
-                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
-                        st.cache_data.clear() # Limpia ranking
-                        st.success(f"✅ ¡Anotado para {nombre}!")
-                        time.sleep(1)
-                        st.rerun()
-                    except:
-                        st.error("Sumaste una chance!")
-            else:
-                st.warning("⚠️ Por favor, poné tu nombre arriba antes de pedir.")
-
+                st.warning("⚠️ ¡Escribí tu nombre arriba antes de pedir!")
 # 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
     st.divider()
@@ -315,3 +275,4 @@ if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
         st.session_state.countdown = 5
         st.rerun()
+
