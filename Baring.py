@@ -152,23 +152,30 @@ if cat:
                     except:
                         st.error("Sumaste una chance!")
 
-# 4. --- RESUMEN Y ÚLTIMOS MOVIMIENTOS ---
-data_actual = cargar_datos()
+# 4. --- RESUMEN, RANKING Y MOVIMIENTOS ---
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
+    
     try:
+        # Aseguramos nombres de columnas
         if df_fix.shape[1] >= 4:
             df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
         
-        # TABLA DE RANKING (Incentivo psicológico)
-        st.subheader("🏆 Ranking de Chances (Sorteo)")
-        # Contamos cuántas veces aparece cada nombre (pedidos realizados)
+        # 1. RANKING DE CHANCES (Arriba de todo)
+        st.subheader("🏆 Ranking de Tickets para el Sorteo")
+        st.markdown("_¡Cada pedido es una chance más de ganar!_")
+        
         ranking = df_fix.groupby("Invitado").size().reset_index(name='Tickets 🎫')
         ranking = ranking.sort_values(by='Tickets 🎫', ascending=False)
         st.dataframe(ranking, hide_index=True, use_container_width=True)
 
-        # RESUMEN DE GASTOS (Más discreto abajo)
+        # 2. ÚLTIMOS MOVIMIENTOS (En el medio)
+        st.subheader("📋 Últimos Pedidos en la Barra")
+        historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5)
+        st.table(historial)
+
+        # 3. TOTAL ACUMULADO (Abajo de todo y discreto)
         with st.expander("💰 Ver mi total acumulado"):
             df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
             resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
@@ -176,9 +183,8 @@ if not data_actual.empty:
             resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
             st.table(resumen)
         
-    except:
-        st.info("Cargando historial de pedidos...")
-
+    except Exception as e:
+        st.info("Actualizando datos...")
 
 
 
