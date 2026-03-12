@@ -138,11 +138,18 @@ def cargar_datos():
         json_data = r.json()
         if len(json_data) > 1:
             df = pd.DataFrame(json_data[1:], columns=json_data[0])
+            
+            # ESTA LÍNEA MAGICA: Convierte todo a un formato estándar
+            # No importa si dice 'INVITADO', 'invitado' o 'Invitado'
+            df.columns = [c.strip().capitalize() for c in df.columns]
+            
+            # O mejor aún, forzalas por posición para que coincidan con tu código:
+            # df.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+            
             return df
     except:
         pass
     return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
-
 # 3. --- FORMULARIO DE PEDIDO ---
 with st.form("form_pedido", clear_on_submit=True):
     nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
@@ -183,6 +190,7 @@ if enviar:
         st.warning("⚠️ Falta nombre o producto.")
 
 # 4. --- DASHBOARD Y ADMIN ---
+# 4. --- DASHBOARD Y ADMIN ---
 data_actual = cargar_datos()
 
 if not data_actual.empty:
@@ -207,4 +215,10 @@ if not data_actual.empty:
     if all(col in data_actual.columns for col in ["Invitado", "Producto", "Cant"]):
         st.subheader("📋 Últimos Pedidos")
         st.table(data_actual[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5))
-
+# Panel Admin al final
+st.divider()
+admin_key = st.text_input("🔑 Admin", type="password", placeholder="Clave...", label_visibility="collapsed")
+if admin_key.lower() == "ulises":
+    if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
+        st.session_state.countdown = 5
+        st.rerun()
