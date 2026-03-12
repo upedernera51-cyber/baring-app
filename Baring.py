@@ -6,56 +6,113 @@ import time
 import random
 
 # 1. --- CONFIGURACIÓN Y ESTÉTICA ---
+
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
+
+
+# Importamos una fuente elegante para tu firma
+
 st.markdown("""
+
     <style>
+
     @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
-    
+
+   
+
     .stApp {
-        background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), 
+
+        background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)),
+
                     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop") !important;
+
         background-size: cover !important;
+
         background-position: center !important;
-        background-attachment: fixed !important; 
-    }
-    h1 { color: #FFB300 !important; text-align: center; text-shadow: 2px 2px 4px #000; margin-bottom: 0px !important; }
-    
-    .signature {
-        font-family: 'Great Vibes', cursive;
-        font-size: 26px !important;
-        color: #FFB300 !important;
-        text-align: center;
-        margin-top: -10px !important;
-        margin-bottom: 25px !important;
-        opacity: 0.9;
-    }
-    
-    .price-tag {
-        font-size: 42px !important;
-        color: #FFB300 !important;
-        font-weight: bold;
-        text-align: center;
-        padding: 10px;
-        border: 2px solid #FFB300;
-        border-radius: 15px;
-        background: rgba(0,0,0,0.6);
-        margin: 15px 0;
+
+        background-attachment: fixed !important;
+
     }
 
-    .stButton>button {
-        background-color: #FFB300 !important;
-        color: black !important;
-        font-weight: bold !important;
-        font-size: 22px !important;
-        border-radius: 12px !important;
-        height: 3em !important;
-        width: 100% !important;
+    h1 { color: #FFB300 !important; text-align: center; text-shadow: 2px 2px 4px #000; margin-bottom: 0px !important; }
+
+   
+
+    .signature {
+
+        font-family: 'Great Vibes', cursive;
+
+        font-size: 24px !important;
+
+        color: #FFB300 !important;
+
+        text-align: center;
+
+        margin-top: -15px !important;
+
+        margin-bottom: 25px !important;
+
+        opacity: 0.9;
+
     }
-    
+
+   
+
+    .price-tag {
+
+        font-size: 42px !important;
+
+        color: #FFB300 !important;
+
+        font-weight: bold;
+
+        text-align: center;
+
+        padding: 10px;
+
+        border: 2px solid #FFB300;
+
+        border-radius: 15px;
+
+        background: rgba(0,0,0,0.6);
+
+        margin: 15px 0;
+
+    }
+
+
+
+    /* Optimización de botones para móvil */
+
+    .stButton>button {
+
+        background-color: #FFB300 !important;
+
+        color: black !important;
+
+        font-weight: bold !important;
+
+        font-size: 22px !important;
+
+        border-radius: 12px !important;
+
+        height: 3em !important;
+
+        width: 100% !important;
+
+    }
+
+   
+
+    /* Estilo de tablas */
+
     .stTable { background: rgba(255,255,255,0.05); border-radius: 8px; }
+
     </style>
+
     """, unsafe_allow_html=True)
+
 
 st.title("🍻 Baring App 🍻")
 st.markdown('<p class="signature">by Ulises</p>', unsafe_allow_html=True)
