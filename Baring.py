@@ -209,62 +209,83 @@ if st.session_state.countdown == -2:
                 st.rerun()
     st.stop()
 
-# 4. --- FORMULARIO DE PEDIDO OPTIMIZADO ---
-nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
+# 4. --- FORMULARIO DE PEDIDO (ESTILO GRILLA COMPACTA) ---
 
-st.write("### 📂 1. Seleccioná Categoría")
-cat = st.selectbox("Categorías", [None] + list(CARTA.keys()), label_visibility="collapsed")
+# CSS Extra para los botones de producto (hacerlos pequeños y grises)
+st.markdown("""
+    <style>
+    /* Estilo para los botones de la grilla de productos */
+    div.stColumn > div > button {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        font-size: 12px !important;
+        height: 45px !important;
+        padding: 2px !important;
+        margin-bottom: -10px !important;
+    }
+    /* Estilo para el botón de confirmar (mantenemos el naranja grande) */
+    div.stButton > button[kind="primary"] {
+        background-color: #FFB300 !important;
+        color: black !important;
+        font-size: 20px !important;
+        height: 60px !important;
+        margin-top: 20px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
+cat = st.selectbox("📂 Seleccioná Categoría", [None] + list(CARTA.keys()))
 
 if cat:
-    st.write(f"### 🍕 2. Seleccioná Producto")
-    
-    # PUNTO 1: Botones más pequeños y elegantes (2 por fila)
-    productos = list(CARTA[cat].keys())
-    cols = st.columns(2) # Esto los hace más pequeños y ordenados
-    
-    # Usamos session_state para guardar la selección sin recargar la página
+    # Usamos session_state para la selección
     if f"sel_{cat}" not in st.session_state:
         st.session_state[f"sel_{cat}"] = None
-
+    
+    # GRILLA DE PRODUCTOS (4 columnas para que sean pequeños y entren varios)
+    productos = list(CARTA[cat].keys())
+    cols = st.columns(4) 
+    
     for i, prod in enumerate(productos):
-        # Botones transparentes con borde (estilo box)
-        if cols[i % 2].button(prod, key=f"btn_{prod}", use_container_width=True):
+        # El botón de producto es sutil
+        if cols[i % 4].button(prod, key=f"btn_{prod}"):
             st.session_state[f"sel_{cat}"] = prod
 
-    # Si hay un producto seleccionado, mostramos la confirmación
+    # Mostrar selección actual y botón de confirmación
     prod_sel = st.session_state[f"sel_{cat}"]
     
     if prod_sel:
         precio = CARTA[cat][prod_sel]
-        st.markdown(f'<div class="price-tag">Seleccionado: {prod_sel}<br>${precio:,}</div>', unsafe_allow_html=True)
         
-        cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
-
-        # PUNTO 2 y 3: Botón de confirmación con protección contra doble click
-        # Usamos use_container_width y un estado de carga
-        if st.button("🚀 CONFIRMAR PEDIDO", type="primary", use_container_width=True):
-            if not nombre:
-                st.warning("⚠️ Poné tu nombre arriba.")
-            else:
-                # PUNTO 3: Protección inmediata (spinner bloquea la UI)
-                with st.spinner("Anotando..."):
-                    payload = {
-                        "Invitado": nombre, 
-                        "Producto": prod_sel, 
-                        "Cant": int(cant), 
-                        "Subtotal": int(precio * cant)
-                    }
-                    try:
-                        # PUNTO 4: Envío rápido
-                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                        st.cache_data.clear()
-                        st.success("✅ ¡Pedido realizado!")
-                        # Limpiamos selección para el próximo
-                        st.session_state[f"sel_{cat}"] = None
-                        time.sleep(1)
-                        st.rerun()
-                    except:
-                        st.error("Error de conexión.")
+        # Un mensaje compacto de qué hay seleccionado
+        st.markdown(f"<p style='text-align:center; color:#FFB300; margin-top:10px;'><b>Seleccionado:</b> {prod_sel} (${precio:,})</p>", unsafe_allow_html=True)
+        
+        col_cant, col_ok = st.columns([1, 2])
+        with col_cant:
+            cant = st.number_input("Cant:", 1, 10, 1)
+        with col_ok:
+            # ESTE es el botón grande y naranja
+            if st.button("🚀 ANOTAR PEDIDO", type="primary", use_container_width=True):
+                if nombre:
+                    with st.spinner("Enviando..."):
+                        payload = {
+                            "Invitado": nombre, 
+                            "Producto": prod_sel, 
+                            "Cant": int(cant), 
+                            "Subtotal": int(precio * cant)
+                        }
+                        try:
+                            requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
+                            st.cache_data.clear()
+                            st.success("¡Listo!")
+                            st.session_state[f"sel_{cat}"] = None
+                            time.sleep(1)
+                            st.rerun()
+                        except:
+                            st.error("Error")
+                else:
+                    st.warning("⚠️ Falta nombre")
 
 # 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
