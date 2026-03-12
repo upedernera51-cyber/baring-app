@@ -4,62 +4,65 @@ import requests
 import json
 import time
 
-# 1. --- CONFIGURACIÓN Y ESTÉTICA (LOOK RUIN BAR) ---
+# 1. --- CONFIGURACIÓN Y ESTÉTICA ---
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
+# Importamos una fuente elegante para tu firma
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+    
     .stApp {
         background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), 
                     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1000&auto=format&fit=crop") !important;
         background-size: cover !important;
         background-position: center !important;
-        background-attachment: scroll !important; 
+        background-attachment: fixed !important; 
     }
-    .stMarkdown p, label p {
-        color: white !important;
-        font-size: 19px !important;
-        font-weight: 600 !important;
-        text-shadow: 1px 1px 2px black !important;
-    }
-    h1, h2, h3 {
+    h1 { color: #FFB300 !important; text-align: center; text-shadow: 2px 2px 4px #000; margin-bottom: 0px !important; }
+    
+    .signature {
+        font-family: 'Great Vibes', cursive;
+        font-size: 24px !important;
         color: #FFB300 !important;
-        text-align: center !important;
-        text-shadow: 2px 2px 4px #000000 !important;
+        text-align: center;
+        margin-top: -15px !important;
+        margin-bottom: 25px !important;
+        opacity: 0.9;
     }
-    div[data-testid="stWidgetLabel"] p { color: #FFB300 !important; font-size: 22px !important; }
     
     .price-tag {
-        font-size: 40px !important;
+        font-size: 42px !important;
         color: #FFB300 !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        padding: 15px !important;
-        margin: 20px 0 !important;
-        border: 3px solid #FFB300 !important;
-        border-radius: 20px !important;
-        background: rgba(0,0,0,0.8) !important;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+        border: 2px solid #FFB300;
+        border-radius: 15px;
+        background: rgba(0,0,0,0.6);
+        margin: 15px 0;
     }
+
+    /* Optimización de botones para móvil */
     .stButton>button {
         background-color: #FFB300 !important;
         color: black !important;
         font-weight: bold !important;
-        font-size: 24px !important;
-        border-radius: 15px !important;
-        height: 3.5em !important;
+        font-size: 22px !important;
+        border-radius: 12px !important;
+        height: 3em !important;
         width: 100% !important;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
     }
-    .stTable { background-color: rgba(255, 255, 255, 0.05) !important; border-radius: 10px !important; }
-    th { color: #FFB300 !important; font-size: 18px !important; }
-    td { color: white !important; font-size: 16px !important; }
+    
+    /* Estilo de tablas */
+    .stTable { background: rgba(255,255,255,0.05); border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🍻 BARING 🍻")
-st.markdown('<p class="signature">By Ulises</p>', unsafe_allow_html=True)
+st.title("🍻 Baring App 🍻")
 
-# 2. --- CARTA COMPLETA ---
+
+# 2. --- DATOS ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
@@ -107,7 +110,7 @@ CARTA = {
     }
 }
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30) # Reducido a 30s para que la lista sea más dinámica
 def cargar_datos():
     try:
         r = requests.get(URL_SCRIPT, timeout=5)
@@ -117,61 +120,61 @@ def cargar_datos():
     except: pass
     return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 
-data_actual = cargar_datos()
+# 3. --- LÓGICA DE PEDIDO ---
+nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
 
-# 3. --- FORMULARIO ---
-nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
-
-st.write("### 📂 1. Seleccioná Categoría")
-cat = st.pills("Categorías", list(CARTA.keys()), label_visibility="collapsed")
+st.write("### 📂 1. Categoría")
+cat = st.pills("Cat", list(CARTA.keys()), label_visibility="collapsed")
 
 if cat:
-    st.write(f"### 🍕 2. Seleccioná {cat}")
-    prod = st.pills("Productos", list(CARTA[cat].keys()), label_visibility="collapsed")
+    st.write(f"### 🍕 2. {cat}")
+    prod = st.pills("Prod", list(CARTA[cat].keys()), label_visibility="collapsed")
     
     if prod:
-        precio_actual = CARTA[cat][prod]
-        st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
-        
+        precio = CARTA[cat][prod]
+        st.markdown(f'<div class="price-tag">${precio:,}</div>', unsafe_allow_html=True)
         cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
         
-        if st.button("🚀 ¡ANOTAR PEDIDO!"):
-            if nombre:
-                payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
-                with st.spinner("Enviando a la barra..."):
-                    # Se eliminó el cartel de error para mayor fluidez
-                    requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=5)
-                    st.cache_data.clear()
-                    st.success(f"✅ ¡Anotado para {nombre}!")
-                    time.sleep(1)
-                    st.rerun()
+        # Optimizamos el botón para evitar doble envío
+        if st.button("🚀 ¡ANOTAR PEDIDO!", use_container_width=True):
+            if not nombre:
+                st.warning("⚠️ Ey! Poné tu nombre arriba.")
             else:
-                st.warning("⚠️ Por favor, poné tu nombre.")
+                with st.spinner("Anotando..."):
+                    payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio * cant)}
+                    try:
+                        requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
+                        st.balloons() # Efecto visual de éxito
+                        st.success(f"¡Listo {nombre}! Ya te lo anoté.")
+                        st.cache_data.clear()
+                        time.sleep(1.5)
+                        st.rerun()
+                    except:
+                        st.error("Hubo un pequeño error de red, pero reintentá.")
 
-# 4. --- RESUMEN Y ÚLTIMOS MOVIMIENTOS ---
-if not data_actual.empty:
+# 4. --- RESUMEN ---
+data = cargar_datos()
+if not data.empty:
     st.divider()
-    df_fix = data_actual.copy()
-    try:
-        # Aseguramos nombres de columnas
-        if df_fix.shape[1] >= 4:
-            df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
-        
-        # TABLA 1: Resumen por persona
-        st.subheader("💰 Resumen de Gastos")
-        df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
-        resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
-        resumen.columns = ["Invitado", "Total ($)"]
-        resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
-        st.table(resumen)
+    st.subheader("💰 Resumen de la Mesa")
+    
+    # Procesamiento limpio de datos
+    df = data.copy()
+    df.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
+    df["Subtotal"] = pd.to_numeric(df["Subtotal"], errors='coerce').fillna(0)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        resumen = df.groupby("Invitado")["Subtotal"].sum().reset_index()
+        resumen.columns = ["Quién", "Total"]
+        resumen["Total"] = resumen["Total"].map("${:,.0f}".format)
+        st.dataframe(resumen, hide_index=True, use_container_width=True)
 
-        # TABLA 2: Últimos pedidos (Historial)
-        st.subheader("📋 Últimos Pedidos")
-        historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5)
-        st.table(historial)
-        
-    except:
-        st.info("Cargando historial de pedidos...")
+    with col2:
+        ultimos = df[["Invitado", "Producto"]].iloc[::-1].head(5)
+        st.dataframe(ultimos, hide_index=True, use_container_width=True)
+
 
 
 
