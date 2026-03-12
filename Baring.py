@@ -263,7 +263,7 @@ if cat:
 
     st.write(f"### 🍕 2. Seleccioná {cat}")
 
-    prod = st.selectbox("Productos", [None] + list(CARTA[cat].keys()), label_visibility="collapsed")
+    prod = st.radio("Productos", [None] + list(CARTA[cat].keys()), label_visibility="collapsed")
 
    
 
@@ -361,3 +361,4 @@ if admin_key.lower() == "ulises":
     if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
         st.session_state.countdown = 5
         st.rerun()
+
