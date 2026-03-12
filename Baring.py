@@ -8,7 +8,6 @@ import random
 # 1. --- CONFIGURACIÓN Y ESTÉTICA ---
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
 
-# Importamos una fuente elegante para tu firma
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
@@ -24,10 +23,10 @@ st.markdown("""
     
     .signature {
         font-family: 'Great Vibes', cursive;
-        font-size: 24px !important;
+        font-size: 26px !important;
         color: #FFB300 !important;
         text-align: center;
-        margin-top: -15px !important;
+        margin-top: -10px !important;
         margin-bottom: 25px !important;
         opacity: 0.9;
     }
@@ -44,7 +43,6 @@ st.markdown("""
         margin: 15px 0;
     }
 
-    /* Optimización de botones para móvil */
     .stButton>button {
         background-color: #FFB300 !important;
         color: black !important;
@@ -55,15 +53,14 @@ st.markdown("""
         width: 100% !important;
     }
     
-    /* Estilo de tablas */
     .stTable { background: rgba(255,255,255,0.05); border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🍻 Baring App 🍻")
+st.markdown('<p class="signature">by Ulises</p>', unsafe_allow_html=True)
 
-
-# 2. --- DATOS ---
+# 2. --- DATOS Y CONEXIÓN ---
 URL_SCRIPT = st.secrets["api_url"]
 
 CARTA = {
@@ -77,7 +74,7 @@ CARTA = {
         "Fernet Branca": 6500, "Gin Tonic Malandra": 7000, "Aperol Spritz": 7500,
         "Mojito / Mojito Malibú": 7500, "Jager Bomb / Jager Julep": 11500,
         "Negroni": 8800, "Old Fashioned": 11500, "Cynar Julep": 7000,
-        "Gin Tonic Importado": 9000, "Coctelería Autor (Dobby/Hedwig/etc)": 11500,
+        "Gin Tonic Importado": 9000, "Coctelería Autor": 11500,
         "Vermouth / Gancia": 6000, "Caipirinha / Caipiroska": 7000
     },
     "Pizzas 🍕": {
@@ -95,15 +92,10 @@ CARTA = {
         "Lomo Visio (XL)": 20900, "Chegusan de Mila (XL)": 19990
     },
     "Para Picar 🍟": {
-        "Papas Clásicas": 9500, "Papas Especiales (Cheddar/Bravas/Visio)": 9900,
+        "Papas Clásicas": 9500, "Papas Especiales": 9900,
         "Papas Stout (Carne desmechada)": 10500, "Bastones de Mozzarella": 9900,
         "Rabas Clásicas": 17500, "Crispy Chicken Fingers": 11900,
         "Tabla La Visio (Para 2)": 28990, "Tabla La Visio (Para 4)": 39990
-    },
-    "Vinos & Espumantes 🍷": {
-        "Lobo Piel de Cordero": 13500, "Eugenio Bustos Dulce": 15000,
-        "Dieter Meier Puro": 18700, "Luigi Bosca": 23100,
-        "Chandon Extra Brut": 28000, "Botella Chandon + 3 Speed": 37000
     },
     "Sin Alcohol & Postres 🥤": {
         "Gaseosa / Agua / Saborizada": 3800, "Vaso Limonada": 3800,
@@ -111,29 +103,27 @@ CARTA = {
     }
 }
 
-@st.cache_data(ttl=10)
+@st.cache_data(ttl=5)
 def cargar_datos():
     try:
-        r = requests.get(URL_SCRIPT, timeout=5)
+        r = requests.get(f"{URL_SCRIPT}?nocache={time.time()}", timeout=5)
         json_data = r.json()
         if len(json_data) > 1:
             df = pd.DataFrame(json_data[1:], columns=json_data[0])
-            # Forzamos los nombres de las columnas aquí para que todo el código los reconozca
             if df.shape[1] >= 4:
                 df.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
             return df
-    except: pass
+    except:
+        pass
     return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 
-# Cargamos los datos ya normalizados
 data_actual = cargar_datos()
 
-data_actual = cargar_datos()
-  # --- LÓGICA DE SORTEO (ESTADO ANIMACIÓN) ---
+# 3. --- LÓGICA DE SORTEO ---
 if "countdown" not in st.session_state:
     st.session_state.countdown = -1
 
-# Si el sorteo está corriendo, mostramos la cuenta regresiva
+# Pantalla de Cuenta Regresiva
 if st.session_state.countdown >= 0:
     placeholder = st.empty()
     for i in range(st.session_state.countdown, -1, -1):
@@ -147,124 +137,77 @@ if st.session_state.countdown >= 0:
 # Pantalla del Ganador
 if st.session_state.countdown == -2:
     if not data_actual.empty:
-        # Cada fila es un ticket: el que más pidió tiene más chances
-        bolsa = data_actual["Invitado"].tolist()
-        ganador = random.choice(bolsa)
-        
-        st.markdown(f"""
-            <div style="border: 4px solid #FFB300; background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center;">
-                <h2 style='color: white;'>🏆 ¡EL GANADOR ES! 🏆</h2>
-                <div style="color: #FFB300; font-size: 50px; font-weight: bold;">{ganador}</div>
-                <p style='color: white; font-size: 20px;'>¡Vení a la barra por tu premio!</p>
-            </div>
-        """, unsafe_allow_html=True)
-        st.snow()
-        if st.button("Volver a la App"):
-            st.session_state.countdown = -1
-            st.rerun()
-    st.stop() # Detiene el resto de la app para que solo se vea el ganador  
+        bolsa = data_actual["Invitado"].dropna().tolist()
+        if bolsa:
+            ganador = random.choice(bolsa)
+            st.markdown(f"""
+                <div style="border: 4px solid #FFB300; background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center;">
+                    <h2 style='color: white;'>🏆 ¡EL GANADOR ES! 🏆</h2>
+                    <div style="color: #FFB300; font-size: 50px; font-weight: bold;">{ganador}</div>
+                    <p style='color: white; font-size: 20px;'>¡Vení a la barra por tu premio!</p>
+                </div>
+            """, unsafe_allow_html=True)
+            st.snow()
+            if st.button("Volver a la App"):
+                st.session_state.countdown = -1
+                st.rerun()
+    st.stop()
 
-# 3. --- LÓGICA DE PEDIDO ---
-nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
-
-st.write("### 📂 1. Categoría")
+# 4. --- FORMULARIO DE PEDIDO ---
+nombre = st.text_input("👤 Tu nombre:", placeholder="¿Quién sos?")
 cat = st.selectbox("📂 1. Seleccioná Categoría", [None] + list(CARTA.keys()))
 
 if cat:
-    st.write(f"### 🍕 2. {cat}")
-    prod = st.pills("Prod", list(CARTA[cat].keys()), label_visibility="collapsed")
-    
+    prod = st.selectbox(f"🍕 2. Seleccioná {cat}", [None] + list(CARTA[cat].keys()))
     if prod:
-        precio = CARTA[cat][prod]
-        st.markdown(f'<div class="price-tag">${precio:,}</div>', unsafe_allow_html=True)
+        precio_actual = CARTA[cat][prod]
+        st.markdown(f'<div class="price-tag">${precio_actual:,}</div>', unsafe_allow_html=True)
         cant = st.number_input("🔢 Cantidad:", 1, 10, 1)
         
-        # Optimizamos el botón para evitar doble envío
         if st.button("🚀 ¡ANOTAR PEDIDO!", use_container_width=True):
-            if not nombre:
-                st.warning("⚠️ Ey! Poné tu nombre arriba.")
-            else:
-                with st.spinner("Anotando..."):
-                    payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio * cant)}
+            if nombre:
+                payload = {"Invitado": nombre, "Producto": prod, "Cant": int(cant), "Subtotal": int(precio_actual * cant)}
+                with st.spinner("Enviando..."):
                     try:
                         requests.post(URL_SCRIPT, data=json.dumps(payload), timeout=8)
-                        st.balloons() # Efecto visual de éxito
-                        st.success(f"¡Listo {nombre}! Ya te lo anoté.")
                         st.cache_data.clear()
-                        time.sleep(1.5)
+                        st.success(f"✅ ¡Anotado para {nombre}!")
+                        time.sleep(1)
                         st.rerun()
                     except:
-                        st.error("Sumaste una chance!")
+                        st.error("Error de conexión.")
+            else:
+                st.warning("⚠️ Poné tu nombre arriba.")
 
-
-
-# 4. --- RESUMEN, RANKING Y MOVIMIENTOS ---
-
+# 5. --- DASHBOARD Y ADMIN ---
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
     
-    try:
-        # Aseguramos nombres de columnas
-        if df_fix.shape[1] >= 4:
-            df_fix.columns = ["Invitado", "Producto", "Cant", "Subtotal"]
-        
-        # 1. RANKING DE CHANCES (Arriba de todo)
-        st.subheader("🏆 Ranking de Tickets para el Sorteo")
-        st.markdown("_¡Cada pedido es una chance más de ganar!_")
-        
-        ranking = df_fix.groupby("Invitado").size().reset_index(name='Tickets 🎫')
-        ranking = ranking.sort_values(by='Tickets 🎫', ascending=False)
-        st.dataframe(ranking, hide_index=True, use_container_width=True)
+    # Ranking
+    st.subheader("🏆 Ranking de Tickets (Sorteo)")
+    ranking = df_fix.groupby("Invitado").size().reset_index(name='Tickets 🎫')
+    st.dataframe(ranking.sort_values(by='Tickets 🎫', ascending=False), hide_index=True, use_container_width=True)
 
-        # 2. ÚLTIMOS MOVIMIENTOS (En el medio)
-        st.subheader("📋 Últimos Pedidos en la Barra")
-        historial = df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5)
-        st.table(historial)
+    # Últimos pedidos
+    st.subheader("📋 Últimos Pedidos")
+    st.table(df_fix[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5))
 
-        # 3. TOTAL ACUMULADO (Abajo de todo y discreto)
-        with st.expander("💰 Ver mi total acumulado"):
-            df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
-            resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
-            resumen.columns = ["Invitado", "Total ($)"]
-            resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
-            st.table(resumen)
-        
-    except Exception as e:
-        st.info("Actualizando datos...")
+    # Total oculto
+    with st.expander("💰 Ver mi total acumulado"):
+        df_fix["Subtotal"] = pd.to_numeric(df_fix["Subtotal"], errors='coerce').fillna(0)
+        resumen = df_fix.groupby("Invitado")["Subtotal"].sum().reset_index()
+        resumen.columns = ["Invitado", "Total ($)"]
+        resumen["Total ($)"] = resumen["Total ($)"].map("${:,.0f}".format)
+        st.table(resumen)
 
-# --- PANEL DE ADMIN DISCRETO (Al final de todo) ---
+# Panel Admin
 st.divider()
+col_k, col_b = st.columns([3, 1])
+with col_k:
+    admin_key = st.text_input("🔑 Admin", type="password", placeholder="Clave...", label_visibility="collapsed")
 
-# Usamos columnas para que el botón de OK esté al lado del texto
-col_key, col_btn = st.columns([3, 1])
-
-with col_key:
-    admin_key = st.text_input("🔑 Acceso Admin", type="password", placeholder="Clave...", label_visibility="collapsed")
-
-# Si escribiste la clave, habilitamos el botón de sorteo
 if admin_key.lower() == "ulises":
-    st.success("✅ Modo Admin Activo")
-    if st.button("🔥 ¡INICIAR SORTEO AHORA! 🔥", use_container_width=True):
+    if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
         st.session_state.countdown = 10
         st.rerun()
-else:
-    if admin_key: # Si escribió algo pero no es la clave
-        st.error("Clave incorrecta")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
