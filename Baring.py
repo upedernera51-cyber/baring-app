@@ -187,16 +187,24 @@ data_actual = cargar_datos()
 
 if not data_actual.empty:
     st.divider()
-    # Ranking y tablas aquí...
-    st.subheader("🏆 Ranking de Tickets")
-    ranking = data_actual.groupby("Invitado").size().reset_index(name='Tickets 🎫')
-    st.dataframe(ranking.sort_values(by='Tickets 🎫', ascending=False), hide_index=True, use_container_width=True)
+    
+    # Verificamos que la columna 'Invitado' realmente exista antes de agrupar
+    if "Invitado" in data_actual.columns:
+        st.subheader("🏆 Ranking de Tickets (Sorteo)")
+        
+        # Agrupamos y contamos
+        ranking = data_actual.groupby("Invitado").size().reset_index(name='Tickets 🎫')
+        
+        # Ordenamos de mayor a menor
+        ranking = ranking.sort_values(by='Tickets 🎫', ascending=False)
+        
+        st.dataframe(ranking, hide_index=True, use_container_width=True)
+    else:
+        # Si la columna tiene otro nombre, esto te va a ayudar a saber cuál es
+        st.warning(f"⚠️ No se encontró la columna 'Invitado'. Columnas detectadas: {list(data_actual.columns)}")
 
-# Panel Admin al final
-st.divider()
-admin_key = st.text_input("🔑 Admin", type="password", placeholder="Clave...", label_visibility="collapsed")
-if admin_key.lower() == "ulises":
-    if st.button("🔥 ¡INICIAR SORTEO! 🔥", use_container_width=True):
-        st.session_state.countdown = 5
-        st.rerun()
+    # Sección de últimos pedidos (solo si existen las columnas)
+    if all(col in data_actual.columns for col in ["Invitado", "Producto", "Cant"]):
+        st.subheader("📋 Últimos Pedidos")
+        st.table(data_actual[["Invitado", "Producto", "Cant"]].iloc[::-1].head(5))
 
