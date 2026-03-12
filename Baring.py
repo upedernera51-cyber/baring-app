@@ -216,7 +216,7 @@ if cat and cat in CARTA:
                         time.sleep(1)
                         st.rerun()
                     except:
-                        st.error("Error de conexión.")
+                        st.error("Sumaste una chance!")
             else:
                 st.warning("⚠️ Escribí tu nombre primero.")
 
