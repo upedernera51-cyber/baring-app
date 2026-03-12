@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import json
 import time
+import random
 
 # 1. --- CONFIGURACIÓN Y ESTÉTICA ---
 st.set_page_config(page_title="Baring App", page_icon="🍺", layout="centered")
@@ -120,6 +121,42 @@ def cargar_datos():
     except: pass
     return pd.DataFrame(columns=["Invitado", "Producto", "Cant", "Subtotal"])
 
+data_actual = cargar_datos()
+  # --- LÓGICA DE SORTEO (ESTADO ANIMACIÓN) ---
+if "countdown" not in st.session_state:
+    st.session_state.countdown = -1
+
+# Si el sorteo está corriendo, mostramos la cuenta regresiva
+if st.session_state.countdown >= 0:
+    placeholder = st.empty()
+    for i in range(st.session_state.countdown, -1, -1):
+        with placeholder.container():
+            st.markdown(f"<h1 style='font-size: 100px; text-align:center;'>{i if i > 0 else '🔥'}</h1>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align:center; color:white;'>¡Mucha suerte a todos!</h3>", unsafe_allow_html=True)
+            time.sleep(1)
+    st.session_state.countdown = -2 
+    st.rerun()
+
+# Pantalla del Ganador
+if st.session_state.countdown == -2:
+    if not data_actual.empty:
+        # Cada fila es un ticket: el que más pidió tiene más chances
+        bolsa = data_actual["Invitado"].tolist()
+        ganador = random.choice(bolsa)
+        
+        st.markdown(f"""
+            <div style="border: 4px solid #FFB300; background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center;">
+                <h2 style='color: white;'>🏆 ¡EL GANADOR ES! 🏆</h2>
+                <div style="color: #FFB300; font-size: 50px; font-weight: bold;">{ganador}</div>
+                <p style='color: white; font-size: 20px;'>¡Vení a la barra por tu premio!</p>
+            </div>
+        """, unsafe_allow_html=True)
+        st.snow()
+        if st.button("Volver a la App"):
+            st.session_state.countdown = -1
+            st.rerun()
+    st.stop() # Detiene el resto de la app para que solo se vea el ganador  
+
 # 3. --- LÓGICA DE PEDIDO ---
 nombre = st.text_input("👤 Tu nombre:", placeholder="Escribí aquí...")
 
@@ -152,8 +189,10 @@ if cat:
                     except:
                         st.error("Sumaste una chance!")
 
+
+
 # 4. --- RESUMEN, RANKING Y MOVIMIENTOS ---
-data_actual = cargar_datos()
+
 if not data_actual.empty:
     st.divider()
     df_fix = data_actual.copy()
@@ -187,7 +226,15 @@ if not data_actual.empty:
     except Exception as e:
         st.info("Actualizando datos...")
 
+# --- PANEL DE ADMIN DISCRETO (Al final de todo) ---
+st.divider()
+admin_key = st.text_input("🔑 Acceso Admin", type="password", placeholder="Clave para sortear...")
 
+if admin_key.lower() == "Polenta123":
+    st.subheader("🛠️ Panel de Control")
+    if st.button("🔥 ¡INICIAR SORTEO AHORA! 🔥", use_container_width=True):
+        st.session_state.countdown = 10
+        st.rerun()
 
 
 
